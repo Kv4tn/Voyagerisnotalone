@@ -13,7 +13,17 @@ This directory contains detailed reports for each major development phase or com
 
 ## Generating PDF Reports
 
-### Option 1: Using Pandoc (Recommended)
+### Option 0: Built-in macOS tools (works without installing anything)
+
+```bash
+.kiro/reports/tools/build_report.sh .kiro/reports/REPORT_<date>_<name>.md
+```
+
+Uses `tools/md_to_html.py` (Python standard library only) and `tools/html_to_pdf.js`
+(macOS text system via `osascript`). Images go in `.kiro/reports/assets/`, 480 px wide.
+Options 1–4 below need extra software that is not installed on the dev machine.
+
+### Option 1: Using Pandoc
 
 If pandoc is not installed:
 ```bash
