@@ -90,7 +90,8 @@ graph TD
 
 
 - [ ] 1.3. GameState Singleton Implementation [MVP]
-  - **Status 2026-11-17**: partial. Signal renamed to `new_game_started` (it clashed with the `game_started` bool). Not done: `start_new_game()` targets `residential_deck.tscn`, which does not exist yet; pause/resume not tested.
+  - **Status 2026-11-17**: partial. Signal renamed to `new_game_started` (it clashed with the `game_started` bool).
+  - **Status 2026-11-17 (menu)**: verified by `tests/unit/test_game_state.gd` and `tests/integration/test_new_game_flow.gd`: name validation with player-facing errors (`get_player_name_error()`, Unicode letters allowed for RU/KZ), `start_new_game()` trims the name, sets `game_started`/chapter 1/story flags and loads `FIRST_SCENE_PATH` (prototype room for now), pause/resume/toggle. Remaining: verify that quests and relationships are reset once those managers are implemented (3.7, 4.1).
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 1.2
@@ -114,6 +115,7 @@ graph TD
 
 
 - [ ] 1.4. SceneManager Singleton Implementation [MVP]
+  - **Status 2026-11-17 (menu)**: partial, verified by `tests/integration/test_new_game_flow.gd`: `transition_to()` loads the new scene, frees the old one, emits started/completed once each, fade overlay (CanvasLayer 100, 0.25 s each way) ends transparent and stops blocking the mouse. Not done: player state preservation across scenes, memory-leak check, test for a missing scene path; "wipe" falls back to fade.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 1.2
@@ -1508,6 +1510,7 @@ graph TD
 
 
 - [ ] 10.4. Main Menu Scene [MVP]
+  - **Status 2026-11-17 (menu)**: partial. `scenes/ui/main_menu.tscn` is the main scene: title, star background, New Game and Quit, keyboard focus, shared theme `scenes/ui/theme/voyager_theme.tres`. New Game opens the name entry (REQ-3: 2-20 chars, errors shown, Enter starts, Esc goes back). Verified by `tests/integration/test_new_game_flow.gd`. Not done: Load Game, Settings, Credits, menu music; Quit is wired but not covered by a test.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 1.3, 1.4, 9.3

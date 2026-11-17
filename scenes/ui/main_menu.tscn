@@ -1,0 +1,147 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Theme" path="res://scenes/ui/theme/voyager_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/starfield.gd" id="3_stars"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.016, 0.027, 0.055, 1)
+
+[node name="Starfield" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_stars")
+
+[node name="MenuPanel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -80.0
+offset_right = 160.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Title" type="Label" parent="MenuPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.63, 0.25, 1)
+theme_override_font_sizes/font_size = 28
+text = "VOYAGER IS NOT ALONE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="MenuPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 1)
+theme_override_font_sizes/font_size = 12
+text = "Prologue: Asterion"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="MenuPanel"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+
+[node name="NewGameButton" type="Button" parent="MenuPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 22)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "New Game"
+
+[node name="QuitButton" type="Button" parent="MenuPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 22)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Quit"
+
+[node name="NamePanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -70.0
+offset_right = 150.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="NamePanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Prompt" type="Label" parent="NamePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.63, 0.25, 1)
+theme_override_font_sizes/font_size = 14
+text = "Commander, state your name"
+
+[node name="NameEdit" type="LineEdit" parent="NamePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+placeholder_text = "2-20 letters or digits"
+max_length = 20
+
+[node name="ErrorLabel" type="Label" parent="NamePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.36, 0.33, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="NamePanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BackButton" type="Button" parent="NamePanel/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 22)
+layout_mode = 2
+text = "Back"
+
+[node name="StartButton" type="Button" parent="NamePanel/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 22)
+layout_mode = 2
+text = "Start Mission"
+
+[node name="Hint" type="Label" parent="NamePanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
+theme_override_font_sizes/font_size = 10
+text = "Enter: start    Esc: back"
+horizontal_alignment = 1

@@ -19,6 +19,7 @@ signal message_closed()
 
 const GROUP_MESSAGE_DISPLAY: StringName = &"message_display"
 const PROMPT_PREFIX: String = "[E] "
+const NAME_PREFIX: String = "CMDR "
 
 # ============================================================================
 # PRIVATE VARIABLES
@@ -26,6 +27,7 @@ const PROMPT_PREFIX: String = "[E] "
 
 var _prompt_text: String = ""
 
+@onready var _name_label: Label = $NameLabel
 @onready var _prompt_panel: Control = $PromptPanel
 @onready var _prompt_label: Label = $PromptPanel/PromptLabel
 @onready var _message_panel: Control = $MessagePanel
@@ -40,6 +42,8 @@ func _ready() -> void:
 	add_to_group(GROUP_MESSAGE_DISPLAY)
 	_message_panel.visible = false
 	_refresh_prompt()
+	GameState.player_name_changed.connect(_set_commander_name)
+	_set_commander_name(GameState.player_name)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _message_panel.visible:
@@ -52,6 +56,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # ============================================================================
 # PUBLIC METHODS
 # ============================================================================
+
+func get_commander_text() -> String:
+	return _name_label.text if _name_label.visible else ""
 
 func is_message_open() -> bool:
 	return _message_panel.visible
@@ -80,6 +87,10 @@ func close_message() -> void:
 # ============================================================================
 # PRIVATE METHODS
 # ============================================================================
+
+func _set_commander_name(commander_name: String) -> void:
+	_name_label.text = NAME_PREFIX + commander_name.to_upper()
+	_name_label.visible = not commander_name.is_empty()
 
 func _refresh_prompt() -> void:
 	_prompt_label.text = _prompt_text

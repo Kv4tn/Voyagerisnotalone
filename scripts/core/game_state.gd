@@ -23,6 +23,10 @@ signal player_name_changed(new_name: String)
 const TOTAL_CHAPTERS: int = 7
 const MIN_PLAYER_NAME_LENGTH: int = 2
 const MAX_PLAYER_NAME_LENGTH: int = 20
+## Scene loaded by start_new_game(). Points at the prototype room until the
+## Residential Deck exists.
+const FIRST_SCENE_PATH: String = "res://scenes/prototype/prototype_room.tscn"
+const MAIN_MENU_PATH: String = "res://scenes/ui/main_menu.tscn"
 
 # ============================================================================
 # PUBLIC VARIABLES
@@ -40,6 +44,7 @@ var chapter_start_time: float = 0.0  # Time when current chapter started
 # ============================================================================
 
 var _systems_initialized: bool = false
+var _player_name_regex: RegEx = null
 
 # ============================================================================
 # GODOT LIFECYCLE METHODS
@@ -76,14 +81,15 @@ func initialize_systems() -> void:
 
 func start_new_game(p_name: String) -> void:
 	"""
-	Initialize a new game with player name
-	@param p_name: Player's chosen name
+	Initialize a new game with player name and load the first scene
+	@param p_name: Player's chosen name; surrounding spaces are removed
 	"""
-	if not validate_player_name(p_name):
+	var clean_name: String = p_name.strip_edges()
+	if not validate_player_name(clean_name):
 		push_error("GameState: Invalid player name: '%s'" % p_name)
 		return
 	
-	player_name = p_name
+	player_name = clean_name
 	current_chapter = 1
 	game_started = true
 	game_time = 0.0
@@ -102,8 +108,7 @@ func start_new_game(p_name: String) -> void:
 	new_game_started.emit()
 	player_name_changed.emit(player_name)
 	
-	# Load first scene
-	SceneManager.transition_to("res://scenes/environments/station/residential_deck.tscn")
+	SceneManager.transition_to(FIRST_SCENE_PATH)
 
 func set_player_name(new_name: String) -> bool:
 	"""
@@ -111,12 +116,13 @@ func set_player_name(new_name: String) -> bool:
 	@param new_name: New player name
 	@return: True if name was changed successfully
 	"""
-	if not validate_player_name(new_name):
-		push_error("GameState: Invalid player name: '%s'" % new_name)
+	var clean_name: String = new_name.strip_edges()
+	# validate_player_name() already warns; the caller handles the false.
+	if not validate_player_name(clean_name):
 		return false
 	
 	var old_name: String = player_name
-	player_name = new_name
+	player_name = clean_name
 	StoryFlagManager.set_flag("player_name_set", true)
 	
 	print("GameState: Player name changed from '%s' to '%s'" % [old_name, player_name])
@@ -125,30 +131,39 @@ func set_player_name(new_name: String) -> bool:
 
 func validate_player_name(candidate: String) -> bool:
 	"""
-	Validate player name meets requirements
-	@param candidate: Name to validate
+	Validate player name meets requirements (REQ-3)
+	@param candidate: Name to validate, already trimmed
 	@return: True if name is valid
 	"""
-	if candidate.is_empty():
-		push_warning("GameState: Player name cannot be empty")
+	var error: String = get_player_name_error(candidate)
+	if not error.is_empty():
+		push_warning("GameState: " + error)
 		return false
-	
-	if candidate.length() < MIN_PLAYER_NAME_LENGTH:
-		push_warning("GameState: Player name too short (min %d characters)" % MIN_PLAYER_NAME_LENGTH)
-		return false
-	
-	if candidate.length() > MAX_PLAYER_NAME_LENGTH:
-		push_warning("GameState: Player name too long (max %d characters)" % MAX_PLAYER_NAME_LENGTH)
-		return false
-	
-	# Check for valid characters (alphanumeric and spaces only)
-	var regex: RegEx = RegEx.new()
-	regex.compile("^[a-zA-Z0-9 ]+$")
-	if not regex.search(candidate):
-		push_warning("GameState: Player name contains invalid characters (use letters, numbers, spaces only)")
-		return false
-	
 	return true
+
+func get_player_name_error(candidate: String) -> String:
+	"""
+	Explain why a name is invalid, for display on the name entry screen
+	@param candidate: Name to check, already trimmed
+	@return: Player-facing error text, or "" when the name is valid
+	"""
+	if candidate.is_empty():
+		return "Enter a name."
+	if candidate.length() < MIN_PLAYER_NAME_LENGTH:
+		return "Name must be at least %d characters." % MIN_PLAYER_NAME_LENGTH
+	if candidate.length() > MAX_PLAYER_NAME_LENGTH:
+		return "Name must be at most %d characters." % MAX_PLAYER_NAME_LENGTH
+	# Any script's letters and digits plus single inner spaces, so names in
+	# the planned Russian and Kazakh localizations are accepted too.
+	if not _name_regex().search(candidate):
+		return "Use only letters, digits and single spaces between words."
+	return ""
+
+func _name_regex() -> RegEx:
+	if _player_name_regex == null:
+		_player_name_regex = RegEx.new()
+		_player_name_regex.compile("^[\\p{L}\\p{N}]+( [\\p{L}\\p{N}]+)*$")
+	return _player_name_regex
 
 func set_chapter(chapter: int) -> void:
 	"""

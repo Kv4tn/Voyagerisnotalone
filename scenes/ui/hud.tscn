@@ -26,6 +26,19 @@ theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
 theme_override_font_sizes/font_size = 10
 text = "WASD / Arrows: move    E: use"
 
+[node name="NameLabel" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -322.0
+offset_top = 20.0
+offset_right = -22.0
+offset_bottom = 34.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.88, 0.63, 0.25, 0.9)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 2
+
 [node name="PromptPanel" type="PanelContainer" parent="."]
 anchors_preset = 7
 anchor_left = 0.5
