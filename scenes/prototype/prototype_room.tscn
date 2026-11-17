@@ -1,0 +1,108 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/prefabs/terminal.tscn" id="2_terminal"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hwall"]
+size = Vector2(640, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vwall"]
+size = Vector2(16, 360)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crate"]
+size = Vector2(32, 24)
+
+[node name="PrototypeRoom" type="Node2D"]
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.043, 0.075, 0.141, 1)
+
+[node name="FloorInset" type="ColorRect" parent="."]
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 608.0
+offset_bottom = 328.0
+mouse_filter = 2
+color = Color(0.06, 0.1, 0.18, 1)
+
+[node name="Walls" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="TopVisual" type="ColorRect" parent="Walls"]
+offset_right = 640.0
+offset_bottom = 16.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="BottomVisual" type="ColorRect" parent="Walls"]
+offset_top = 344.0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="LeftVisual" type="ColorRect" parent="Walls"]
+offset_right = 16.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="RightVisual" type="ColorRect" parent="Walls"]
+offset_left = 624.0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 8)
+shape = SubResource("RectangleShape2D_hwall")
+
+[node name="Bottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 352)
+shape = SubResource("RectangleShape2D_hwall")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(8, 180)
+shape = SubResource("RectangleShape2D_vwall")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(632, 180)
+shape = SubResource("RectangleShape2D_vwall")
+
+[node name="Crate" type="StaticBody2D" parent="."]
+position = Vector2(200, 200)
+collision_mask = 0
+
+[node name="Visual" type="ColorRect" parent="Crate"]
+offset_left = -16.0
+offset_top = -12.0
+offset_right = 16.0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.2, 0.26, 0.36, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Crate"]
+shape = SubResource("RectangleShape2D_crate")
+
+[node name="Terminal" parent="." instance=ExtResource("2_terminal")]
+position = Vector2(480, 23)
+terminal_id = "proto_engineering_log"
+title = "ASTERION // Engineering Log"
+message = "Station power grid at 62% capacity.
+Voyager pre-flight checks: pending.
+
+Unscheduled transmission logged on 1420 MHz. Source: unknown."
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(320, 220)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[connection signal="interaction_target_changed" from="Player" to="HUD" method="set_prompt"]
+[connection signal="message_opened" from="HUD" to="Player" method="lock_input"]
+[connection signal="message_closed" from="HUD" to="Player" method="unlock_input"]

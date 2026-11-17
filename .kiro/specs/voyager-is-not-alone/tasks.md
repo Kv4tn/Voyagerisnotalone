@@ -48,7 +48,8 @@ graph TD
 ### Milestone 1: Foundation Systems (Week 1)
 **Priority**: Critical Path - Everything depends on these foundations
 
-- [ ] 1. Project Setup and Structure [MVP]
+- [x] 1. Project Setup and Structure [MVP]
+- **Verified 2026-11-17**: `godot --headless --path . --import` and a headless run finish with no errors; main scene set to `scenes/prototype/prototype_room.tscn`.
 - **Owner**: Dev 1
 - **Estimated**: 2 hours
 - **Dependencies**: None
@@ -67,7 +68,8 @@ graph TD
   4. Initialize Git with Godot .gitignore
   5. Create README.md with project setup instructions
 
-- [ ] 1.2. Autoload Singleton Configuration [MVP]
+- [x] 1.2. Autoload Singleton Configuration [MVP]
+  - **Verified 2026-11-17**: headless run prints "Ready" for all 11 autoloads and `GameState.initialize_systems()` assertions pass.
   - **Owner**: Dev 1
   - **Estimated**: 1 hour
   - **Dependencies**: 1.1
@@ -88,6 +90,7 @@ graph TD
 
 
 - [ ] 1.3. GameState Singleton Implementation [MVP]
+  - **Status 2026-11-17**: partial. Signal renamed to `new_game_started` (it clashed with the `game_started` bool). Not done: `start_new_game()` targets `residential_deck.tscn`, which does not exist yet; pause/resume not tested.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 1.2
@@ -167,6 +170,7 @@ graph TD
 
 
 - [ ] 2.1. Player Controller - Movement [MVP]
+  - **Status 2026-11-17**: partial, verified by `tests/integration/test_prototype_room.gd`: WASD/arrow bindings, 120 px/s, normalized diagonals, wall and obstacle collision, no movement while the message box is open. Not done: AnimatedSprite2D (placeholder polygons used), 60 FPS measurement. Script lives at `scripts/components/player_controller.gd` (architecture.md location) instead of `scripts/player/`.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 1.1, 1.3, 1.4
@@ -240,6 +244,7 @@ graph TD
 
 
 - [ ] 2.4. Interaction System - Detection [MVP]
+  - **Status 2026-11-17**: partial, verified by test: 32 px InteractionArea, prompt "[E] Use terminal" appears in range, hides out of range and while the message box is open. Closest-object selection is implemented but not yet tested with several objects in range.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 2.1
@@ -266,6 +271,7 @@ graph TD
 
 
 - [ ] 2.5. Interaction System - Execution [MVP]
+  - **Status 2026-11-17**: partial, verified by test: E on a terminal opens a message box, movement is locked while it is open, E/Esc closes it, 0.2 s cooldown prevents the closing press from reopening it. Not done: NPC, door and quest-object interactions, audio feedback.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 2.4
@@ -292,6 +298,7 @@ graph TD
 
 
 - [ ] 2.6. Base Interactable Objects [MVP]
+  - **Status 2026-11-17**: partial. Done: `Interactable` base (`scripts/components/interactable.gd`) and terminal prefab (`scenes/prefabs/terminal.tscn`) with placeholder visuals, physics layers named world/player/interactable. Not done: door and quest-object prefabs.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 2.5

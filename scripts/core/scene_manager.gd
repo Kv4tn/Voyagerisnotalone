@@ -23,9 +23,9 @@ var is_transitioning: bool = false
 
 func _ready() -> void:
 	print("SceneManager: Ready")
-	# Store reference to initial scene
-	var root = get_tree().root
-	current_scene = root.get_child(root.get_child_count() - 1)
+	# current_scene is resolved lazily in transition_to(). During autoload
+	# _ready() the main scene is not in the tree yet, so the last child of
+	# root would be an autoload and freeing it would break the game.
 
 # ============================================================================
 # PUBLIC METHODS
@@ -53,6 +53,8 @@ func transition_to(scene_path: String, transition_type: String = "fade") -> void
 	await play_transition_out(transition_type)
 	
 	# Unload current scene
+	if current_scene == null:
+		current_scene = get_tree().current_scene
 	if current_scene != null:
 		current_scene.queue_free()
 		await current_scene.tree_exited
