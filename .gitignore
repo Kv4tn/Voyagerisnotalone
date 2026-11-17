@@ -1,6 +1,5 @@
-# Godot 4+ specific ignores
+# Godot 4+ specific ignores (*.import files are committed: they hold texture import settings)
 .godot/
-*.import
 
 # Godot-specific
 *.translation
