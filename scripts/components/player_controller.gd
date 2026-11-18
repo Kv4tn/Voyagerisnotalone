@@ -40,6 +40,10 @@ var _cooldown_left: float = 0.0
 # GODOT LIFECYCLE METHODS
 # ============================================================================
 
+func _ready() -> void:
+	DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	DialogueManager.dialogue_ended.connect(unlock_input)
+
 func _physics_process(delta: float) -> void:
 	_cooldown_left = maxf(_cooldown_left - delta, 0.0)
 
@@ -97,3 +101,10 @@ func _update_interaction_target() -> void:
 	if closest != current_target:
 		current_target = closest
 		interaction_target_changed.emit(current_target)
+
+# ============================================================================
+# SIGNAL HANDLERS
+# ============================================================================
+
+func _on_dialogue_started(_dialogue_id: String) -> void:
+	lock_input()

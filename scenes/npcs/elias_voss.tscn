@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/npcs/npc_base.tscn" id="1_base"]
+
+[node name="EliasVoss" instance=ExtResource("1_base")]
+npc_id = "elias_voss"
+
+[node name="Suit" parent="Placeholder" index="0"]
+color = Color(0.35, 0.33, 0.3, 1)
+
+[node name="Accent" parent="Placeholder" index="2"]
+color = Color(0.88, 0.63, 0.25, 1)

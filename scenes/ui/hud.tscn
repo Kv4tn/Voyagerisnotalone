@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="2_dialogue"]
+[ext_resource type="Theme" path="res://scenes/ui/theme/voyager_theme.tres" id="3_theme"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 8.0
@@ -101,4 +103,49 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
 theme_override_font_sizes/font_size = 10
 text = "[E] Close"
+horizontal_alignment = 2
+
+[node name="DialogueBox" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -112.0
+offset_right = -40.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("3_theme")
+script = ExtResource("2_dialogue")
+
+[node name="VBox" type="VBoxContainer" parent="DialogueBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpeakerLabel" type="Label" parent="DialogueBox/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.63, 0.25, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="TextLabel" type="Label" parent="DialogueBox/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 3
+
+[node name="Choices" type="VBoxContainer" parent="DialogueBox/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HintLabel" type="Label" parent="DialogueBox/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
+theme_override_font_sizes/font_size = 10
 horizontal_alignment = 2

@@ -96,6 +96,7 @@ func start_new_game(p_name: String) -> void:
 	chapter_start_time = 0.0
 	
 	# Reset all managers
+	DialogueManager.reset()
 	QuestManager.reset()
 	RelationshipManager.reset()
 	StoryFlagManager.reset()

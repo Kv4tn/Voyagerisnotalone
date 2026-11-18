@@ -43,6 +43,8 @@ func initialize_default_flags() -> void:
 	flags["preflight_checklist_started"] = false
 	flags["preflight_checklist_complete"] = false
 	flags["launch_authorized"] = false
+	flags["engineering_log_read"] = false
+	flags["signal_disclosed"] = false
 
 func set_flag(flag_name: String, value: Variant) -> void:
 	"""Set a story flag value"""

@@ -37,10 +37,10 @@ func _ready() -> void:
 func initialize_crew_relationships() -> void:
 	"""Initialize relationships for all crew members"""
 	# Start with neutral relationships
-	relationships["crew_maya"] = {"trust": 50, "bond": 50}
-	relationships["crew_elias"] = {"trust": 50, "bond": 50}
-	relationships["crew_nora"] = {"trust": 50, "bond": 50}
-	relationships["crew_daniel"] = {"trust": 50, "bond": 50}
+	relationships["maya_chen"] = {"trust": 50, "bond": 50}
+	relationships["elias_voss"] = {"trust": 50, "bond": 50}
+	relationships["nora_reyes"] = {"trust": 50, "bond": 50}
+	relationships["daniel_kim"] = {"trust": 50, "bond": 50}
 
 func change_trust(character_id: String, delta: int) -> void:
 	"""Change trust value for a character"""

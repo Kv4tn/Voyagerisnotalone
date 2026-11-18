@@ -12,6 +12,8 @@ extends StaticBody2D
 @export var terminal_id: String = "terminal_01"
 @export var title: String = "Terminal"
 @export_multiline var message: String = ""
+## Story flag set to true when the player reads this terminal. Empty = none.
+@export var sets_story_flag: String = ""
 
 # ============================================================================
 # PRIVATE VARIABLES
@@ -36,3 +38,5 @@ func _on_interacted(_interactor: Node) -> void:
 			terminal_id, GameHud.GROUP_MESSAGE_DISPLAY])
 		return
 	get_tree().call_group(GameHud.GROUP_MESSAGE_DISPLAY, &"show_message", title, message)
+	if not sets_story_flag.is_empty():
+		StoryFlagManager.set_flag(sets_story_flag, true)

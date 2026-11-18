@@ -44,6 +44,8 @@ func _ready() -> void:
 	_refresh_prompt()
 	GameState.player_name_changed.connect(_set_commander_name)
 	_set_commander_name(GameState.player_name)
+	DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	DialogueManager.dialogue_ended.connect(_refresh_prompt)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _message_panel.visible:
@@ -88,10 +90,14 @@ func close_message() -> void:
 # PRIVATE METHODS
 # ============================================================================
 
+func _on_dialogue_started(_dialogue_id: String) -> void:
+	_refresh_prompt()
+
 func _set_commander_name(commander_name: String) -> void:
 	_name_label.text = NAME_PREFIX + commander_name.to_upper()
 	_name_label.visible = not commander_name.is_empty()
 
 func _refresh_prompt() -> void:
 	_prompt_label.text = _prompt_text
-	_prompt_panel.visible = not _prompt_text.is_empty() and not _message_panel.visible
+	_prompt_panel.visible = (not _prompt_text.is_empty() and not _message_panel.visible
+		and not DialogueManager.is_dialogue_active)

@@ -1,0 +1,13 @@
+{
+  "npc_id": "elias_voss",
+  "display_name": "Elias Voss",
+  "role": "Chief Engineer",
+  "description": "Technically gifted, sarcastic, distrustful of mission leadership.",
+  "dialogue_files": {
+    "prologue": "res://data/dialogues/elias_voss_prologue.json"
+  },
+  "initial_relationships": {
+    "trust": 50,
+    "bond": 50
+  }
+}

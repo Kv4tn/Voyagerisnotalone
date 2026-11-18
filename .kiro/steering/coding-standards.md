@@ -353,7 +353,7 @@ All JSON files must be valid and properly formatted:
 **IDs**: Use descriptive, namespaced IDs
 - Dialogue: `<character>_<context>_<number>` (e.g., `maya_intro_001`)
 - Quest: `<chapter>_<type>_<name>` (e.g., `ch1_main_power_restoration`)
-- NPC: `<role>_<name>` (e.g., `crew_maya`, `engineer_elias`)
+- NPC: `<firstname>_<lastname>` (e.g., `maya_chen`, `elias_voss`); file `data/npcs/<npc_id>.json`
 
 ## Testing Standards
 

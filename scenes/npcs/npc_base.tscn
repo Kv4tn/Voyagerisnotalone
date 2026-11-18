@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/components/npc_controller.gd" id="1_npc"]
+[ext_resource type="Script" path="res://scripts/components/interactable.gd" id="2_interactable"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 6.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_talk"]
+radius = 10.0
+
+[node name="NPC" type="CharacterBody2D"]
+collision_mask = 0
+motion_mode = 1
+script = ExtResource("1_npc")
+
+[node name="Placeholder" type="Node2D" parent="."]
+
+[node name="Suit" type="Polygon2D" parent="Placeholder"]
+color = Color(0.55, 0.6, 0.68, 1)
+polygon = PackedVector2Array(-6, -10, 6, -10, 6, 8, -6, 8)
+
+[node name="Face" type="Polygon2D" parent="Placeholder"]
+color = Color(0.86, 0.72, 0.6, 1)
+polygon = PackedVector2Array(-4, -8, 4, -8, 4, -3, -4, -3)
+
+[node name="Accent" type="Polygon2D" parent="Placeholder"]
+color = Color(0.37, 0.7, 0.77, 1)
+polygon = PackedVector2Array(2, -2, 6, -2, 6, 8, 2, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="Interactable" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("2_interactable")
+prompt_text = "Talk"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactable"]
+shape = SubResource("CircleShape2D_talk")

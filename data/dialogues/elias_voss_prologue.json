@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "dialogue_id": "elias_voss_prologue",
+  "participants": ["elias_voss"],
+  "comment": "First talk with the chief engineer. Repeat visits skip the introduction. The 1420 MHz choice appears only after the player read the engineering log terminal.",
+  "start_node": "greeting_again",
+  "nodes": [
+    {
+      "node_id": "greeting_again",
+      "speaker_id": "elias_voss",
+      "text": "Back again, {player_name}? The reactor hasn't gotten any less temperamental since you left.",
+      "conditions": {
+        "story_flags": [{"flag": "met_elias", "value": true}]
+      },
+      "fallback_node": "greeting_first",
+      "next_node": "status"
+    },
+    {
+      "node_id": "greeting_first",
+      "speaker_id": "elias_voss",
+      "text": "So you're {player_name}. The commander they picked for Voyager.",
+      "effects": [
+        {"type": "set_flag", "flag": "met_elias", "value": true}
+      ],
+      "responses": [
+        {
+          "response_id": "ask_status",
+          "text": "That's me. I'd like to hear how the ship is doing.",
+          "next_node": "status"
+        },
+        {
+          "response_id": "notice_tone",
+          "text": "You don't sound impressed.",
+          "next_node": "skeptic"
+        }
+      ]
+    },
+    {
+      "node_id": "skeptic",
+      "speaker_id": "elias_voss",
+      "text": "Mission leadership has sent me four commanders' worth of memos and zero spare parts. Impress me with a working power grid.",
+      "next_node": "status"
+    },
+    {
+      "node_id": "status",
+      "speaker_id": "elias_voss",
+      "text": "Voyager's grid holds at sixty-two percent. Asterion keeps borrowing power from it, and nobody upstairs will tell me why.",
+      "responses": [
+        {
+          "response_id": "ask_signal",
+          "text": "The engineering log mentions a transmission on 1420 MHz. Is that why?",
+          "next_node": "signal",
+          "conditions": {
+            "story_flags": [{"flag": "engineering_log_read", "value": true}]
+          }
+        },
+        {
+          "response_id": "promise",
+          "text": "I'll find out.",
+          "next_node": "goodbye"
+        }
+      ]
+    },
+    {
+      "node_id": "signal",
+      "speaker_id": "elias_voss",
+      "text": "You read that? That's the hydrogen line. Nobody broadcasts there by accident. Keep it between us until I know more.",
+      "effects": [
+        {"type": "set_flag", "flag": "signal_disclosed", "value": true}
+      ],
+      "next_node": "goodbye"
+    },
+    {
+      "node_id": "goodbye",
+      "speaker_id": "elias_voss",
+      "text": "Now if you'll excuse me, I have a reactor to argue with."
+    }
+  ]
+}

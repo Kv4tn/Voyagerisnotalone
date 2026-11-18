@@ -118,7 +118,7 @@ This document defines how **Developer 1 (Kiro-assisted)** and **Developer 2 (Dia
 1. Create new scene: `res://scenes/npcs/maya_chen.tscn`
 2. Add NPCController as root node
 3. Set exported variables:
-   - `npc_id`: "crew_maya"
+   - `npc_id`: "maya_chen"
    - `npc_name`: "Maya Chen"
    - `dialogue_file`: "res://data/dialogues/maya_chen.json"
    - `starting_position`: Vector2 from editor
@@ -139,36 +139,11 @@ This document defines how **Developer 1 (Kiro-assisted)** and **Developer 2 (Dia
 - List of crew member IDs for relationship effects
 
 **Dias Creates**:
-1. Create file: `res://data/dialogues/maya_intro.json`
-2. Follow schema exactly:
-```json
-{
-	"version": "1.0",
-	"dialogue_id": "maya_intro_001",
-	"metadata": {
-		"author": "Dias",
-		"description": "First conversation with Maya Chen"
-	},
-	"nodes": [
-		{
-			"node_id": "start",
-			"speaker_id": "maya_chen",
-			"text": "Welcome aboard, Commander. I've reviewed our flight plan.",
-			"responses": [
-				{
-					"text": "Thank you, Maya. What's your assessment?",
-					"next_node": "assessment",
-					"effects": {
-						"relationships": [
-							{"character_id": "crew_maya", "trust_delta": 5}
-						]
-					}
-				}
-			]
-		}
-	]
-}
-```
+1. Write the dialogue file in `res://data/dialogues/` following **`docs/dialogue-format.md`**,
+   the single source of truth for the format (fields, supported conditions and effects, validation).
+2. Reference it from the NPC's `data/npcs/<npc_id>.json` under `dialogue_files`.
+3. Run `tests/run_tests.sh`: `test_dialogue_content.gd` validates every dialogue and NPC file.
+   Working example: `data/dialogues/elias_voss_prologue.json`.
 
 **Integration**: DialogueManager automatically loads and plays Dias's dialogue files.
 
@@ -199,7 +174,7 @@ This document defines how **Developer 1 (Kiro-assisted)** and **Developer 2 (Dia
 			"objective_id": "talk_to_elias",
 			"type": "talk_to",
 			"description": "Speak with Elias in Engineering",
-			"target_npc": "crew_elias",
+			"target_npc": "elias_voss",
 			"target_dialogue": "elias_power_crisis"
 		},
 		{
@@ -268,10 +243,10 @@ Both developers use these flags. Add new flags to this shared list:
 
 ### NPC IDs (Must Coordinate)
 
-- `crew_maya` - Maya Chen
-- `crew_elias` - Elias Voss
-- `crew_nora` - Nora Reyes
-- `crew_daniel` - Daniel Kim
+- `maya_chen` - Maya Chen
+- `elias_voss` - Elias Voss
+- `nora_reyes` - Nora Reyes
+- `daniel_kim` - Daniel Kim
 - `station_commander` - Station commander NPC
 - `engineer_tech1` - Engineering technician
 - (Add more as needed)
