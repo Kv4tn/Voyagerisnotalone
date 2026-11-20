@@ -2,9 +2,9 @@
 
 This is the single source of truth for writing dialogue and NPC files.
 It describes what the game supports **today**. Fields from `design.md` §3.5
-that are not listed here (relationship conditions and effects, items, sounds,
-animations) are planned but **rejected by the validator** until their systems
-exist. This page is updated when they land. Quests: `docs/quest-format.md`.
+that are not listed here (items, sounds, animations) are planned but
+**rejected by the validator** until their systems exist. This page is updated
+when they land. Quests: `docs/quest-format.md`.
 
 Working example: `data/dialogues/elias_voss_prologue.json` with
 `data/npcs/elias_voss.json` and `scenes/npcs/elias_voss.tscn`.
@@ -57,7 +57,8 @@ flags that are not registered, which catches typos.
 | `npc_id` | yes | Must equal the file name |
 | `display_name` | yes | Shown as the speaker name and in "[E] Talk to ..." |
 | `dialogue_files` | no | Story phase key → `res://` path of a dialogue file that must exist |
-| `role`, `description`, `initial_relationships` | no | Stored now, used by later systems |
+| `initial_relationships` | no | Starting `trust` and `bond` for crew members, whole numbers 0-100 (default 50) |
+| `role`, `description` | no | Informational for now |
 
 ## NPC scene
 
@@ -142,12 +143,17 @@ stuck.
   ],
   "quests": [
     {"quest_id": "ch1_main_borrowed_power", "status": "active"}
+  ],
+  "relationships": [
+    {"npc_id": "elias_voss", "type": "trust", "min": 60}
   ]
 }
 ```
 
 Every entry must match. A flag that was never set counts as `false`.
 Quest `status` is one of `not_started`, `active`, `completed`, `failed`.
+A relationship entry needs `npc_id` (a crew member), `type` (`trust` or
+`bond`) and `min` and/or `max` (whole numbers 0-100, both inclusive).
 
 ### Effects (supported now)
 
@@ -156,6 +162,7 @@ Quest `status` is one of `not_started`, `active`, `completed`, `failed`.
 {"type": "start_quest", "quest_id": "ch1_main_borrowed_power"}
 {"type": "update_quest", "quest_id": "ch1_main_borrowed_power",
  "objective_id": "report_to_elias", "status": "completed"}
+{"type": "change_relationship", "npc_id": "elias_voss", "relationship": "trust", "change": 5}
 ```
 
 - `set_flag`: `value` may be `true`, `false`, a number or a string.
@@ -163,6 +170,23 @@ Quest `status` is one of `not_started`, `active`, `completed`, `failed`.
 - `update_quest`: completes one objective; `status` must be `"completed"`.
   Does nothing (with a warning) if the quest is not active, so guard the
   node with a `quests` condition.
+- `change_relationship`: adds `change` (a non-zero whole number, may be
+  negative) to a crew member's `trust` or `bond`. Values stay within
+  0-100. The player sees a notice such as "Elias Voss: Trust +5".
+
+### Trust and bond
+
+Crew members: `maya_chen`, `elias_voss`, `nora_reyes`, `daniel_kim`.
+
+- **Trust**: confidence in the player as commander. Raise it for competent,
+  responsible choices; lower it for reckless or dismissive ones.
+- **Bond**: personal connection. Raise it for empathy and shared interests.
+
+A character can like the player and still doubt their leadership, so keep
+the two separate. Tiers from design.md: 0-25 low, 26-50 neutral, 51-75
+good, 76-100 high. Typical changes are ±3 to ±5 per dialogue choice and
+±10 to ±15 for finishing a quest; a single choice should not swing a
+value by more than 10.
 
 ## Patterns
 
@@ -183,6 +207,10 @@ sets that flag:
 response; a terminal or another dialogue sets the flag
 (see `ask_signal` in the Elias file).
 
+**Choice unlocked by trust.** Put a `relationships` condition on the
+response (see `ask_theory` in the Elias file: trust 60 or more). Elias
+starts at 40, so the player has to earn it.
+
 ## Rules the content check enforces
 
 - The file parses as JSON (errors give the line number).
@@ -193,6 +221,9 @@ response; a terminal or another dialogue sets the flag
 - Nodes with `conditions` have a `fallback_node`.
 - Only supported condition keys and effect types are used.
 - Quests and objectives used in conditions and effects exist.
+- Relationship conditions and changes name a crew member, `trust` or `bond`,
+  and whole numbers in range.
+- `initial_relationships` contains only `trust` and `bond`, 0-100.
 - `dialogue_id` equals the file name.
 - Every `speaker_id` is `player` or has `data/npcs/<id>.json`.
 - Every node can be reached from `start_node`.

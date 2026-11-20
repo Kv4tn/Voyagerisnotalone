@@ -1,10 +1,10 @@
 # Quest data format
 
 Single source of truth for writing quest files. It describes what the game
-supports **today**. Other fields from `design.md` §3.6 (relationship
-prerequisites, items, location unlocks, failure conditions, objective types
-such as `investigate` or `complete_puzzle`) are planned and are **rejected by
-the validator** until their systems exist.
+supports **today**. Other fields from `design.md` §3.6 (items, location
+unlocks, failure conditions, objective types such as `investigate` or
+`complete_puzzle`) are planned and are **rejected by the validator** until
+their systems exist.
 
 Working example: `data/quests/ch1_main_borrowed_power.json`, given and
 finished in `data/dialogues/elias_voss_prologue.json`.
@@ -42,7 +42,8 @@ The same check covers dialogues, quests, NPCs and NPC scenes.
      "type": "talk_to", "target": "elias_voss"}
   ],
   "rewards": {
-    "story_flags": [{"flag": "power_draw_investigated", "value": true}]
+    "story_flags": [{"flag": "power_draw_investigated", "value": true}],
+    "relationships": [{"npc_id": "elias_voss", "relationship": "trust", "change": 15}]
   }
 }
 ```
@@ -53,9 +54,9 @@ The same check covers dialogues, quests, NPCs and NPC scenes.
 | `title` | yes | Shown in the HUD tracker |
 | `description` | no | For the journal (coming later) |
 | `category` | no | `main`, `side`, `crew` or `tutorial` |
-| `prerequisites` | no | `story_flags` and/or `quests_completed` (list of quest ids) |
+| `prerequisites` | no | `story_flags`, `quests_completed` (list of quest ids), `relationships` (same shape as the dialogue condition) |
 | `objectives` | yes | At least one, and at least one not optional |
-| `rewards` | no | `story_flags` set when the quest completes |
+| `rewards` | no | `story_flags` set and `relationships` changes applied when the quest completes |
 | `version`, `chapter`, `comment`, `$schema` | no | Informational |
 
 Unknown fields are errors.
@@ -106,5 +107,7 @@ objective there.
 - Structure as above; no unknown fields; supported types only.
 - `quest_id` equals the file name; objective ids unique.
 - Every flag in prerequisites, objectives and rewards is in the shared list.
+- Relationship prerequisites and rewards name a crew member, `trust` or
+  `bond`, and whole numbers in range. A failed quest gives no rewards.
 - `talk_to` targets have `data/npcs/<id>.json`; `quests_completed` quests exist.
 - Dialogues only reference quests and objectives that exist.

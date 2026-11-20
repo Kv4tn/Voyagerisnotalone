@@ -89,7 +89,8 @@ graph TD
     5. Test that all singletons initialize on game start
 
 
-- [ ] 1.3. GameState Singleton Implementation [MVP]
+- [x] 1.3. GameState Singleton Implementation [MVP]
+  - **Status 2026-11-20 (relationships)**: the last open criterion is verified: `start_new_game()` resets relationships, quests and story flags (`tests/integration/test_new_game_flow.gd`). All acceptance criteria met.
   - **Status 2026-11-17**: partial. Signal renamed to `new_game_started` (it clashed with the `game_started` bool).
   - **Status 2026-11-20 (quests)**: `start_new_game()` resetting quests and story flags is now verified by `tests/integration/test_new_game_flow.gd`. Relationship reset remains (3.7).
   - **Status 2026-11-17 (menu)**: verified by `tests/unit/test_game_state.gd` and `tests/integration/test_new_game_flow.gd`: name validation with player-facing errors (`get_player_name_error()`, Unicode letters allowed for RU/KZ), `start_new_game()` trims the name, sets `game_started`/chapter 1/story flags and loads `FIRST_SCENE_PATH` (prototype room for now), pause/resume/toggle. Remaining: verify that quests and relationships are reset once those managers are implemented (3.7, 4.1).
@@ -443,6 +444,7 @@ graph TD
 
 
 - [ ] 3.5. Dialogue Conditions and Branching [MVP]
+  - **Status 2026-11-20 (relationships)**: relationship conditions (`relationships: [{npc_id, type, min, max}]`) added; verified in both directions (theory choice shown at trust 60, hidden at 40). All condition types from the criteria now exist. Still missing: debug logging of condition results.
   - **Status 2026-11-20 (quests)**: quest status conditions (`quests: [{quest_id, status}]`) added and covered by the quest integration test. Still missing: relationship conditions, debug logging.
   - **Status 2026-11-20**: partial, verified by tests: story-flag conditions on nodes and on choices, AND logic, `fallback_node` when a node's conditions fail, loop protection. Not done: relationship conditions (needs 3.7), quest conditions (needs 4.1), debug logging of condition results; the validator rejects these keys until then.
   - **Owner**: Dev 1
@@ -472,6 +474,7 @@ graph TD
 
 
 - [ ] 3.6. Dialogue Actions and Side Effects [MVP]
+  - **Status 2026-11-20 (relationships)**: partial. Done and tested: set_flag, change_relationship, start_quest and update_quest (completes an objective; completing all required objectives completes the quest), run in JSON order. The format uses `effects` on nodes and responses (design.md 3.5), not separate ACTION nodes. Not done: give_item (no inventory), action logging.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 3.5
@@ -500,7 +503,8 @@ graph TD
     10. Test all action types
 
 
-- [ ] 3.7. RelationshipManager Singleton [MVP]
+- [x] 3.7. RelationshipManager Singleton [MVP]
+  - **Status 2026-11-20 (relationships)**: verified by `tests/unit/test_relationship_manager.gd` (50 checks) and the quest/dialogue room tests. Deviation: trust uses 0..100 like bond, not -100..100, following requirements.md REQ-22 and design.md 3.7 (this task's range conflicted with both). Starting values come from `initial_relationships` in `data/npcs/<id>.json` (Elias 40/50, others 50/50). `modify_trust()`/`modify_bond()` return the applied change; `relationship_changed(npc_id, type, old, new)` fires only on real changes; `get_relationship_status()` adds the design.md tiers. Also done: dialogue condition `relationships` and effect `change_relationship`, quest prerequisites and rewards, HUD notice "Elias Voss: Trust +5" (REQ-24.1-2). Not done: relationships screen (REQ-24.3-6).
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 1.2, 3.1

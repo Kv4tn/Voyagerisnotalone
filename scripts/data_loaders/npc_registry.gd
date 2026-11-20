@@ -57,6 +57,18 @@ static func validate(data: Variant, expected_id: String = "") -> PackedStringArr
 	var display_name: Variant = data.get("display_name")
 	if not display_name is String or (display_name as String).is_empty():
 		errors.append("display_name must be a non-empty string")
+	var initial: Variant = data.get("initial_relationships", {})
+	if not initial is Dictionary:
+		errors.append("initial_relationships must be an object")
+	else:
+		for key: Variant in initial:
+			var value: Variant = initial[key]
+			if not key in ["trust", "bond"]:
+				errors.append("initial_relationships: unknown field '%s' (use trust, bond)" % key)
+			elif (not RelationshipManager.is_whole_number(value)
+					or value < RelationshipManager.MIN_VALUE or value > RelationshipManager.MAX_VALUE):
+				errors.append("initial_relationships.%s must be a whole number from %d to %d"
+					% [key, RelationshipManager.MIN_VALUE, RelationshipManager.MAX_VALUE])
 	var files: Variant = data.get("dialogue_files", {})
 	if not files is Dictionary:
 		errors.append("dialogue_files must be an object")
