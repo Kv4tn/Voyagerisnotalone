@@ -2,10 +2,9 @@
 
 This is the single source of truth for writing dialogue and NPC files.
 It describes what the game supports **today**. Fields from `design.md` §3.5
-that are not listed here (relationship and quest conditions, quest and
-relationship effects, items, sounds, animations) are planned but **rejected
-by the validator** until their systems exist. This page is updated when
-they land.
+that are not listed here (relationship conditions and effects, items, sounds,
+animations) are planned but **rejected by the validator** until their systems
+exist. This page is updated when they land. Quests: `docs/quest-format.md`.
 
 Working example: `data/dialogues/elias_voss_prologue.json` with
 `data/npcs/elias_voss.json` and `scenes/npcs/elias_voss.tscn`.
@@ -140,19 +139,30 @@ stuck.
 "conditions": {
   "story_flags": [
     {"flag": "engineering_log_read", "value": true}
+  ],
+  "quests": [
+    {"quest_id": "ch1_main_borrowed_power", "status": "active"}
   ]
 }
 ```
 
 Every entry must match. A flag that was never set counts as `false`.
+Quest `status` is one of `not_started`, `active`, `completed`, `failed`.
 
 ### Effects (supported now)
 
 ```json
 {"type": "set_flag", "flag": "signal_disclosed", "value": true}
+{"type": "start_quest", "quest_id": "ch1_main_borrowed_power"}
+{"type": "update_quest", "quest_id": "ch1_main_borrowed_power",
+ "objective_id": "report_to_elias", "status": "completed"}
 ```
 
-`value` may be `true`, `false`, a number or a string.
+- `set_flag`: `value` may be `true`, `false`, a number or a string.
+- `start_quest`: starts the quest if its prerequisites hold.
+- `update_quest`: completes one objective; `status` must be `"completed"`.
+  Does nothing (with a warning) if the quest is not active, so guard the
+  node with a `quests` condition.
 
 ## Patterns
 
@@ -182,6 +192,7 @@ response; a terminal or another dialogue sets the flag
 - No duplicate `node_id`.
 - Nodes with `conditions` have a `fallback_node`.
 - Only supported condition keys and effect types are used.
+- Quests and objectives used in conditions and effects exist.
 - `dialogue_id` equals the file name.
 - Every `speaker_id` is `player` or has `data/npcs/<id>.json`.
 - Every node can be reached from `start_node`.

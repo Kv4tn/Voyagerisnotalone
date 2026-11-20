@@ -15,6 +15,8 @@ signal interaction_target_changed(target: Interactable)
 # CONSTANTS
 # ============================================================================
 
+## HUD elements find the player through this group (e.g. to fade out of the way).
+const GROUP: StringName = &"player"
 const SPEED: float = 120.0
 ## Minimum time between two interactions, prevents double-triggers.
 const INTERACT_COOLDOWN: float = 0.2
@@ -41,6 +43,7 @@ var _cooldown_left: float = 0.0
 # ============================================================================
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
 	DialogueManager.dialogue_ended.connect(unlock_input)
 

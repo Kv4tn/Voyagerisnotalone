@@ -91,6 +91,7 @@ graph TD
 
 - [ ] 1.3. GameState Singleton Implementation [MVP]
   - **Status 2026-11-17**: partial. Signal renamed to `new_game_started` (it clashed with the `game_started` bool).
+  - **Status 2026-11-20 (quests)**: `start_new_game()` resetting quests and story flags is now verified by `tests/integration/test_new_game_flow.gd`. Relationship reset remains (3.7).
   - **Status 2026-11-17 (menu)**: verified by `tests/unit/test_game_state.gd` and `tests/integration/test_new_game_flow.gd`: name validation with player-facing errors (`get_player_name_error()`, Unicode letters allowed for RU/KZ), `start_new_game()` trims the name, sets `game_started`/chapter 1/story flags and loads `FIRST_SCENE_PATH` (prototype room for now), pause/resume/toggle. Remaining: verify that quests and relationships are reset once those managers are implemented (3.7, 4.1).
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
@@ -442,6 +443,7 @@ graph TD
 
 
 - [ ] 3.5. Dialogue Conditions and Branching [MVP]
+  - **Status 2026-11-20 (quests)**: quest status conditions (`quests: [{quest_id, status}]`) added and covered by the quest integration test. Still missing: relationship conditions, debug logging.
   - **Status 2026-11-20**: partial, verified by tests: story-flag conditions on nodes and on choices, AND logic, `fallback_node` when a node's conditions fail, loop protection. Not done: relationship conditions (needs 3.7), quest conditions (needs 4.1), debug logging of condition results; the validator rejects these keys until then.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
@@ -531,7 +533,8 @@ graph TD
   **Priority**: High - Drives player progression and narrative
 
 
-- [ ] 4.1. QuestManager Singleton - Core [MVP]
+- [x] 4.1. QuestManager Singleton - Core [MVP]
+  - **Status 2026-11-20 (quests)**: verified by `tests/unit/test_quest_manager.gd` (57 checks): states not_started/active/completed/failed, objectives tracked individually, signals quest_started/quest_updated/objective_completed/quest_completed/quest_failed, `get_active_quests()`, `fail_quest()`. API differs from the criteria: objectives advance with `complete_objective(quest_id, objective_id)`, and a quest completes automatically when its required objectives are done (no public `complete_quest()`). Runtime state is kept apart from JSON definitions, ready for save/load.
   - **Owner**: Dev 1
   - **Estimated**: 5 hours
   - **Dependencies**: 1.2, 1.5
@@ -559,7 +562,8 @@ graph TD
     10. Write unit tests for quest state transitions
 
 
-- [ ] 4.2. Quest JSON Loader [MVP]
+- [x] 4.2. Quest JSON Loader [MVP]
+  - **Status 2026-11-20 (quests)**: verified by unit and content tests: loads `data/quests/<quest_id>.json`, validates structure (unknown fields, objective types, ids), missing/invalid files give clear errors, prerequisites (story_flags, quests_completed), cache with `clear_cache()`. Schema documented in `docs/quest-format.md`. One game quest (`ch1_main_borrowed_power`) plus three test fixtures. Supported subset: objective types story_flag and talk_to, rewards story_flags; other design.md fields are rejected until their systems exist.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 4.1
@@ -585,6 +589,7 @@ graph TD
 
 
 - [ ] 4.3. Quest Journal UI [MVP]
+  - **Status 2026-11-20 (quests)**: partial. Done: HUD quest tracker (`scripts/ui/quest_tracker.gd`) lists active quests with [ ]/[x] objectives, updates live, shows COMPLETE for 4 s, fades while the player stands behind it; verified by `tests/integration/test_quest_in_room.gd`. Not done: the Tab journal with Active/Completed sections and descriptions.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 4.1
@@ -613,6 +618,7 @@ graph TD
 
 
 - [ ] 4.4. Quest Integration with Interactions [MVP]
+  - **Status 2026-11-20 (quests)**: partial, verified by `tests/integration/test_quest_in_room.gd` with real input: Elias gives the quest (dialogue effect `start_quest`), reading the terminal completes a story_flag objective, the report line completes the talk_to objective (`update_quest`), the quest completes and sets its reward flag. Not done: progress across scene changes (QuestManager is an autoload, but no second scene exists to test it); QuestObjectInteractable prefab (terminals drive objectives through story flags instead).
   - **Owner**: Dev 1
   - **Estimated**: 2 hours
   - **Dependencies**: 4.1, 2.6

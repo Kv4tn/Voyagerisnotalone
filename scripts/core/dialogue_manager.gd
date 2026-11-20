@@ -3,10 +3,10 @@
 # Holds no UI: DialogueBox listens to the signals and calls advance()/choose().
 # Autoload singleton: res://scripts/core/dialogue_manager.gd
 #
-# Supported now: node/response conditions on story flags, set_flag effects,
-# {player_name} and {npc_name} in text, fallback_node for skipped nodes.
-# Relationship and quest conditions/effects arrive with RelationshipManager
-# and QuestManager; the validator rejects them until then.
+# Supported now (docs/dialogue-format.md): conditions on story flags and quest
+# status, effects set_flag / start_quest / update_quest, {player_name} and
+# {npc_name} in text, fallback_node for skipped nodes. Relationship conditions
+# and effects arrive with RelationshipManager; the validator rejects them.
 extends Node
 
 # ============================================================================
@@ -24,8 +24,10 @@ signal dialogue_ended()
 # ============================================================================
 
 const PLAYER_SPEAKER_ID: String = "player"
-const SUPPORTED_CONDITION_KEYS: PackedStringArray = ["story_flags"]
-const SUPPORTED_EFFECT_TYPES: PackedStringArray = ["set_flag"]
+const SUPPORTED_CONDITION_KEYS: PackedStringArray = ["story_flags", "quests"]
+const SUPPORTED_EFFECT_TYPES: PackedStringArray = ["set_flag", "start_quest", "update_quest"]
+## update_quest can only complete objectives for now.
+const UPDATE_QUEST_STATUSES: PackedStringArray = ["completed"]
 # Unknown keys are rejected so a typo ("next_nod") fails loudly instead of
 # being ignored. "comment" is free text for writers.
 const ROOT_KEYS: PackedStringArray = [
@@ -251,6 +253,9 @@ func _conditions_met(conditions: Dictionary) -> bool:
 		var actual: Variant = StoryFlagManager.get_flag(flag) if StoryFlagManager.has_flag(flag) else false
 		if actual != check["value"]:
 			return false
+	for check: Dictionary in conditions.get("quests", []):
+		if QuestManager.get_quest_status(check["quest_id"]) != check["status"]:
+			return false
 	return true
 
 func _apply_effects(effects: Array) -> void:
@@ -258,6 +263,10 @@ func _apply_effects(effects: Array) -> void:
 		match effect["type"]:
 			"set_flag":
 				StoryFlagManager.set_flag(effect["flag"], effect["value"])
+			"start_quest":
+				QuestManager.start_quest(effect["quest_id"])
+			"update_quest":
+				QuestManager.complete_objective(effect["quest_id"], effect["objective_id"])
 
 static func _validate_node(node: Dictionary, ids: Dictionary, errors: PackedStringArray) -> void:
 	var where: String = "node '%s'" % node["node_id"]
@@ -304,10 +313,19 @@ static func _validate_conditions(conditions: Variant, where: String, errors: Pac
 	var flags: Variant = conditions.get("story_flags", [])
 	if not flags is Array:
 		errors.append(where + ": story_flags must be an array")
+	else:
+		for check: Variant in flags:
+			if not check is Dictionary or not _is_non_empty_string(check.get("flag")) or not check.has("value"):
+				errors.append(where + ": each story_flags entry needs flag and value")
+	var quests: Variant = conditions.get("quests", [])
+	if not quests is Array:
+		errors.append(where + ": quests must be an array")
 		return
-	for check: Variant in flags:
-		if not check is Dictionary or not _is_non_empty_string(check.get("flag")) or not check.has("value"):
-			errors.append(where + ": each story_flags entry needs flag and value")
+	for check: Variant in quests:
+		if (not check is Dictionary or not _is_non_empty_string(check.get("quest_id"))
+				or not check.get("status") in QuestManager.STATUSES):
+			errors.append(where + ": each quests entry needs quest_id and status (%s)"
+				% ", ".join(QuestManager.STATUSES))
 
 static func _validate_effects(effects: Variant, where: String, errors: PackedStringArray) -> void:
 	if not effects is Array:
@@ -318,8 +336,18 @@ static func _validate_effects(effects: Variant, where: String, errors: PackedStr
 			var type_name: String = str(effect.get("type")) if effect is Dictionary else "?"
 			errors.append(where + ": effect type '%s' is not supported yet" % type_name)
 			continue
-		if effect["type"] == "set_flag" and (not _is_non_empty_string(effect.get("flag")) or not effect.has("value")):
-			errors.append(where + ": set_flag needs flag and value")
+		match effect["type"]:
+			"set_flag":
+				if not _is_non_empty_string(effect.get("flag")) or not effect.has("value"):
+					errors.append(where + ": set_flag needs flag and value")
+			"start_quest":
+				if not _is_non_empty_string(effect.get("quest_id")):
+					errors.append(where + ": start_quest needs quest_id")
+			"update_quest":
+				if (not _is_non_empty_string(effect.get("quest_id"))
+						or not _is_non_empty_string(effect.get("objective_id"))
+						or not effect.get("status") in UPDATE_QUEST_STATUSES):
+					errors.append(where + ": update_quest needs quest_id, objective_id and status \"completed\"")
 
 static func _check_keys(object: Dictionary, allowed: PackedStringArray, where: String,
 		errors: PackedStringArray) -> void:

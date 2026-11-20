@@ -156,40 +156,11 @@ This document defines how **Developer 1 (Kiro-assisted)** and **Developer 2 (Dia
 - List of story flags to use as prerequisites
 
 **Dias Creates**:
-1. Create file: `res://data/quests/ch1_power_restoration.json`
-2. Follow schema:
-```json
-{
-	"version": "1.0",
-	"quest_id": "ch1_main_power_restoration",
-	"title": "Emergency Power Restoration",
-	"description": "The engineering deck has lost main power. Restore it before life support fails.",
-	"chapter": 1,
-	"quest_type": "main",
-	"prerequisites": {
-		"story_flags": ["station_docked", "crew_briefing_complete"]
-	},
-	"objectives": [
-		{
-			"objective_id": "talk_to_elias",
-			"type": "talk_to",
-			"description": "Speak with Elias in Engineering",
-			"target_npc": "elias_voss",
-			"target_dialogue": "elias_power_crisis"
-		},
-		{
-			"objective_id": "solve_power_puzzle",
-			"type": "complete_puzzle",
-			"description": "Restore power grid",
-			"puzzle_id": "power_grid_01"
-		}
-	],
-	"rewards": {
-		"story_flags": ["power_restored"],
-		"experience": 100
-	}
-}
-```
+1. Write the quest file in `res://data/quests/` following **`docs/quest-format.md`**
+   (fields, objective types, how dialogues start and complete quests).
+2. Start and finish it from dialogue with `start_quest` / `update_quest`.
+3. Run `tests/run_tests.sh`: `test_dialogue_content.gd` validates quests too.
+   Working example: `data/quests/ch1_main_borrowed_power.json`.
 
 **Integration**: QuestManager loads quests and tracks progress automatically.
 
@@ -240,6 +211,7 @@ Both developers use these flags. Add new flags to this shared list:
 - `launch_authorized`
 - `engineering_log_read` - set by the engineering log terminal (prototype room)
 - `signal_disclosed` - Elias shared what he knows about the 1420 MHz transmission
+- `power_draw_investigated` - reward of `ch1_main_borrowed_power`
 
 The code list is `initialize_default_flags()` in `scripts/core/story_flag_manager.gd`;
 `tests/content/test_dialogue_content.gd` fails on dialogue flags missing from it.
@@ -260,6 +232,7 @@ The code list is `initialize_default_flags()` in `scripts/core/story_flag_manage
 
 Format: `ch<chapter>_<type>_<name>`
 
+- `ch1_main_borrowed_power` - Elias: read the engineering log and report back (implemented)
 - `ch1_main_power_restoration`
 - `ch1_main_crew_introductions`
 - `ch1_side_maya_background`

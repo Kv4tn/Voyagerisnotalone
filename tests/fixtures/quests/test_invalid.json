@@ -1,0 +1,8 @@
+{
+  "quest_id": "not_the_file_name",
+  "title": "Broken",
+  "reward": {},
+  "objectives": [
+    {"objective_id": "a", "description": "Puzzle", "type": "complete_puzzle", "target": "power_grid_01"}
+  ]
+}

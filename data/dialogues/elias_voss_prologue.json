@@ -2,7 +2,7 @@
   "version": "1.0",
   "dialogue_id": "elias_voss_prologue",
   "participants": ["elias_voss"],
-  "comment": "First talk with the chief engineer. Repeat visits skip the introduction. The 1420 MHz choice appears only after the player read the engineering log terminal.",
+  "comment": "First talk with the chief engineer. Repeat visits skip the introduction. Elias gives ch1_main_borrowed_power; the 1420 MHz choice appears after the engineering log is read and completes the quest when it is active.",
   "start_node": "greeting_again",
   "nodes": [
     {
@@ -51,15 +51,36 @@
           "text": "The engineering log mentions a transmission on 1420 MHz. Is that why?",
           "next_node": "signal",
           "conditions": {
-            "story_flags": [{"flag": "engineering_log_read", "value": true}]
+            "story_flags": [
+              {"flag": "engineering_log_read", "value": true},
+              {"flag": "signal_disclosed", "value": false}
+            ]
           }
         },
         {
-          "response_id": "promise",
-          "text": "I'll find out.",
+          "response_id": "take_quest",
+          "text": "I'll find out why.",
+          "next_node": "quest_given",
+          "conditions": {
+            "quests": [{"quest_id": "ch1_main_borrowed_power", "status": "not_started"}],
+            "story_flags": [{"flag": "signal_disclosed", "value": false}]
+          }
+        },
+        {
+          "response_id": "leave",
+          "text": "I'll leave you to it.",
           "next_node": "goodbye"
         }
       ]
+    },
+    {
+      "node_id": "quest_given",
+      "speaker_id": "elias_voss",
+      "text": "Then start with the engineering log on the terminal by the north wall. If it says where the power goes, come tell me.",
+      "effects": [
+        {"type": "start_quest", "quest_id": "ch1_main_borrowed_power"}
+      ],
+      "next_node": "goodbye"
     },
     {
       "node_id": "signal",
@@ -67,6 +88,19 @@
       "text": "You read that? That's the hydrogen line. Nobody broadcasts there by accident. Keep it between us until I know more.",
       "effects": [
         {"type": "set_flag", "flag": "signal_disclosed", "value": true}
+      ],
+      "next_node": "report_thanks"
+    },
+    {
+      "node_id": "report_thanks",
+      "speaker_id": "elias_voss",
+      "text": "And thanks for actually checking, {player_name}. That's more than upstairs ever did.",
+      "conditions": {
+        "quests": [{"quest_id": "ch1_main_borrowed_power", "status": "active"}]
+      },
+      "fallback_node": "goodbye",
+      "effects": [
+        {"type": "update_quest", "quest_id": "ch1_main_borrowed_power", "objective_id": "report_to_elias", "status": "completed"}
       ],
       "next_node": "goodbye"
     },

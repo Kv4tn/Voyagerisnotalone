@@ -17,6 +17,7 @@ var _elias: NPCController = null
 func run_tests() -> void:
 	StoryFlagManager.reset()
 	DialogueManager.reset()
+	QuestManager.reset()
 	GameState.player_name = "Asel"
 
 	_room = (load(ROOM_SCENE) as PackedScene).instantiate()
@@ -80,11 +81,14 @@ func _test_first_conversation() -> void:
 
 	await _finish_line_and_continue()
 	buttons = _box.get_choice_buttons()
-	check(buttons.size() == 1 and buttons[0].text == "1. I'll find out.",
+	check(buttons.size() == 2 and buttons[0].text == "1. I'll find out why."
+		and buttons[1].text == "2. I'll leave you to it.",
 		"signal question hidden before the log is read")
 
 	await _press_e()  # finish typing
-	await _press_e()  # choose "I'll find out."
+	tap_action(&"ui_down")
+	await process_frames(2)
+	await _press_e()  # choose "I'll leave you to it."
 	check(_body_label().text.begins_with("Now if you'll excuse me"), "goodbye line shown")
 	await _press_e()
 	check(_hint_text() == DialogueBox.HINT_END, "last line shows the close hint")
@@ -95,6 +99,8 @@ func _test_first_conversation() -> void:
 	await process_frames(3)
 	check(not DialogueManager.is_dialogue_active, "closing press does not restart the dialogue")
 	check(StoryFlagManager.get_flag("signal_disclosed") == false, "signal_disclosed still false")
+	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
+		"leaving does not start Elias's quest")
 
 
 func _test_read_terminal() -> void:
@@ -121,8 +127,8 @@ func _test_repeat_visit_with_signal_question() -> void:
 	await _press_e()  # continue to status
 	await _press_e()  # finish typing
 	var buttons: Array[Button] = _box.get_choice_buttons()
-	check(buttons.size() == 2 and buttons[0].text.begins_with("1. The engineering log mentions"),
-		"signal question appears after reading the log")
+	check(buttons.size() == 3 and buttons[0].text.begins_with("1. The engineering log mentions"),
+		"signal question appears after reading the log (got %d choices)" % buttons.size())
 	await _press_e()  # choose the focused first choice
 	check(_body_label().text.begins_with("You read that?"), "signal answer shown")
 	check(StoryFlagManager.get_flag("signal_disclosed") == true, "signal_disclosed set")
@@ -131,6 +137,8 @@ func _test_repeat_visit_with_signal_question() -> void:
 	await _press_e()
 	await _press_e()
 	check(not DialogueManager.is_dialogue_active, "dialogue closed after goodbye")
+	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
+		"asking about the signal without the quest leaves the quest unstarted")
 
 
 # ----------------------------------------------------------------------------

@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "quest_id": "ch1_main_borrowed_power",
+  "title": "Borrowed Power",
+  "description": "Asterion keeps drawing power from Voyager and nobody will tell Elias why. Check the engineering log, then report back.",
+  "category": "main",
+  "chapter": 1,
+  "comment": "Given by Elias (elias_voss_prologue, node quest_given). read_log counts even if the log was read before the quest started.",
+  "prerequisites": {
+    "story_flags": [{"flag": "met_elias", "value": true}]
+  },
+  "objectives": [
+    {
+      "objective_id": "read_log",
+      "description": "Read the engineering log terminal",
+      "type": "story_flag",
+      "flag": "engineering_log_read",
+      "value": true
+    },
+    {
+      "objective_id": "report_to_elias",
+      "description": "Tell Elias what the log says",
+      "type": "talk_to",
+      "target": "elias_voss"
+    }
+  ],
+  "rewards": {
+    "story_flags": [{"flag": "power_draw_investigated", "value": true}]
+  }
+}

@@ -1,18 +1,23 @@
-# Content check for every dialogue, NPC metadata file and NPC scene.
-# Run it after editing anything in data/dialogues, data/npcs or scenes/npcs:
+# Content check for every dialogue, quest, NPC metadata file and NPC scene.
+# Run it after editing anything in data/dialogues, data/quests, data/npcs
+# or scenes/npcs:
 #   tests/run_tests.sh tests/content/test_dialogue_content.gd
-# Rules are documented in docs/dialogue-format.md.
+# Rules are documented in docs/dialogue-format.md and docs/quest-format.md.
 extends "res://tests/support/base_test.gd"
 
 const DIALOGUE_DIR: String = "res://data/dialogues/"
 const NPC_DIR: String = "res://data/npcs/"
+const QUEST_DIR: String = "res://data/quests/"
 const NPC_SCENE_DIR: String = "res://scenes/npcs/"
 const NPC_BASE_SCENE: String = "npc_base.tscn"
 
 
 func run_tests() -> void:
 	StoryFlagManager.reset()
+	QuestManager.quest_dir = QUEST_DIR
+	QuestManager.clear_cache()
 	_check_npc_files()
+	_check_quest_files()
 	_check_dialogue_files()
 	_check_npc_scenes()
 
@@ -51,6 +56,22 @@ func _check_dialogue_files() -> void:
 			"%s: every node is reachable from start_node%s" % [file, _details(_unreachable_nodes(data))])
 		check(_unregistered_flags(data).is_empty(),
 			"%s: every story flag is in the shared list%s" % [file, _details(_unregistered_flags(data))])
+		check(_bad_quest_references(data).is_empty(),
+			"%s: every quest and objective it uses exists%s" % [file, _details(_bad_quest_references(data))])
+
+
+func _check_quest_files() -> void:
+	section("data/quests")
+	for file: String in _json_files(QUEST_DIR):
+		var data: Variant = _load(QUEST_DIR + file)
+		if data == null:
+			continue
+		var errors: PackedStringArray = QuestManager.validate_quest(data, file.get_basename())
+		check(errors.is_empty(), "%s: structure is valid%s" % [file, _details(errors)])
+		if not errors.is_empty():
+			continue
+		var problems: PackedStringArray = _quest_reference_problems(data)
+		check(problems.is_empty(), "%s: flags registered, NPCs and quests exist%s" % [file, _details(problems)])
 
 
 func _check_npc_scenes() -> void:
@@ -120,6 +141,56 @@ func _unregistered_flags(tree: Dictionary) -> PackedStringArray:
 		if not StoryFlagManager.has_flag(flag) and not flag in unregistered:
 			unregistered.append(flag)
 	return unregistered
+
+
+func _bad_quest_references(tree: Dictionary) -> PackedStringArray:
+	var problems: PackedStringArray = []
+	for node: Dictionary in tree["nodes"]:
+		var entries: Array = [node]
+		entries.append_array(node.get("responses", []))
+		for entry: Dictionary in entries:
+			for quest_check: Dictionary in entry.get("conditions", {}).get("quests", []):
+				_require_quest(quest_check["quest_id"], "", problems)
+			for effect: Dictionary in entry.get("effects", []):
+				match effect["type"]:
+					"start_quest":
+						_require_quest(effect["quest_id"], "", problems)
+					"update_quest":
+						_require_quest(effect["quest_id"], effect["objective_id"], problems)
+	return problems
+
+
+func _require_quest(quest_id: String, objective_id: String, problems: PackedStringArray) -> void:
+	if not QuestManager.has_quest(quest_id):
+		problems.append("quest '%s' has no data/quests file" % quest_id)
+		return
+	var definition: Dictionary = QuestManager.get_definition(quest_id)
+	if definition.is_empty() or objective_id.is_empty():
+		return
+	for objective: Dictionary in definition["objectives"]:
+		if objective["objective_id"] == objective_id:
+			return
+	problems.append("quest '%s' has no objective '%s'" % [quest_id, objective_id])
+
+
+func _quest_reference_problems(quest: Dictionary) -> PackedStringArray:
+	var problems: PackedStringArray = []
+	var flags: Array = []
+	flags.append_array(quest.get("prerequisites", {}).get("story_flags", []))
+	flags.append_array(quest.get("rewards", {}).get("story_flags", []))
+	for objective: Dictionary in quest["objectives"]:
+		if objective["type"] == QuestManager.OBJECTIVE_STORY_FLAG:
+			flags.append(objective)
+		elif objective["type"] == QuestManager.OBJECTIVE_TALK_TO:
+			if not FileAccess.file_exists(NPC_DIR + objective["target"] + ".json"):
+				problems.append("talk_to target '%s' has no data/npcs file" % objective["target"])
+	for entry: Dictionary in flags:
+		if not StoryFlagManager.has_flag(entry["flag"]):
+			problems.append("flag '%s' is not in the shared list" % entry["flag"])
+	for required: String in quest.get("prerequisites", {}).get("quests_completed", []):
+		if not QuestManager.has_quest(required):
+			problems.append("quests_completed '%s' has no data/quests file" % required)
+	return problems
 
 
 func _collect_flags(entry: Dictionary, into: PackedStringArray) -> void:

@@ -1,0 +1,10 @@
+{
+  "quest_id": "test_follow_up",
+  "title": "Follow Up",
+  "prerequisites": {
+    "quests_completed": ["test_two_steps"]
+  },
+  "objectives": [
+    {"objective_id": "already", "description": "Something done earlier", "type": "story_flag", "flag": "test_follow", "value": true}
+  ]
+}

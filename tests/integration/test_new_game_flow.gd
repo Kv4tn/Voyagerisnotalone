@@ -81,6 +81,12 @@ func _test_valid_name_starts_game(menu: MainMenu) -> void:
 	_scene_manager.scene_transition_started.connect(on_begin)
 	_scene_manager.scene_transition_completed.connect(on_end)
 
+	# Progress from an earlier game that a new game must clear.
+	StoryFlagManager.set_flag("met_elias", true)
+	QuestManager.start_quest("ch1_main_borrowed_power")
+	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_ACTIVE,
+		"old game has an active quest")
+
 	name_edit.clear()
 	type_text("  Asel Nur  ")
 	tap_key(KEY_ENTER)
@@ -93,6 +99,9 @@ func _test_valid_name_starts_game(menu: MainMenu) -> void:
 	check(_game_state.current_chapter == 1, "chapter is 1")
 	check(_story_flags.get_flag("game_started") == true, "story flag game_started set")
 	check(_story_flags.get_flag("player_name_set") == true, "story flag player_name_set set")
+	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
+		"new game resets quests")
+	check(_story_flags.get_flag("met_elias") == false, "new game resets story flags from the old game")
 
 	var finished: bool = await wait_for_transition()
 	check(finished, "transition finished")

@@ -45,6 +45,7 @@ func initialize_default_flags() -> void:
 	flags["launch_authorized"] = false
 	flags["engineering_log_read"] = false
 	flags["signal_disclosed"] = false
+	flags["power_draw_investigated"] = false
 
 func set_flag(flag_name: String, value: Variant) -> void:
 	"""Set a story flag value"""
