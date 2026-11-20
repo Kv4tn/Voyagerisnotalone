@@ -7,7 +7,12 @@
   "chapter": 1,
   "comment": "Given by Elias (elias_voss_prologue, node quest_given). read_log counts even if the log was read before the quest started.",
   "prerequisites": {
-    "story_flags": [{"flag": "met_elias", "value": true}]
+    "story_flags": [
+      {
+        "flag": "met_elias",
+        "value": true
+      }
+    ]
   },
   "objectives": [
     {
@@ -25,6 +30,18 @@
     }
   ],
   "rewards": {
-    "story_flags": [{"flag": "power_draw_investigated", "value": true}]
+    "story_flags": [
+      {
+        "flag": "power_draw_investigated",
+        "value": true
+      }
+    ],
+    "relationships": [
+      {
+        "npc_id": "elias_voss",
+        "relationship": "trust",
+        "change": 15
+      }
+    ]
   }
 }

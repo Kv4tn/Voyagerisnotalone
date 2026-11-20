@@ -1,8 +1,10 @@
 {
   "version": "1.0",
   "dialogue_id": "elias_voss_prologue",
-  "participants": ["elias_voss"],
-  "comment": "First talk with the chief engineer. Repeat visits skip the introduction. Elias gives ch1_main_borrowed_power; the 1420 MHz choice appears after the engineering log is read and completes the quest when it is active.",
+  "participants": [
+    "elias_voss"
+  ],
+  "comment": "First talk with the chief engineer. Repeat visits skip the introduction. Elias gives ch1_main_borrowed_power; the 1420 MHz choice appears after the engineering log is read and completes the quest when it is active. Trust starts at 40: asking about the ship (+5) and finishing the quest (+15) reach 60, which unlocks the off-the-record theory. Engaging with his frustration builds bond.",
   "start_node": "greeting_again",
   "nodes": [
     {
@@ -10,7 +12,12 @@
       "speaker_id": "elias_voss",
       "text": "Back again, {player_name}? The reactor hasn't gotten any less temperamental since you left.",
       "conditions": {
-        "story_flags": [{"flag": "met_elias", "value": true}]
+        "story_flags": [
+          {
+            "flag": "met_elias",
+            "value": true
+          }
+        ]
       },
       "fallback_node": "greeting_first",
       "next_node": "status"
@@ -20,18 +27,38 @@
       "speaker_id": "elias_voss",
       "text": "So you're {player_name}. The commander they picked for Voyager.",
       "effects": [
-        {"type": "set_flag", "flag": "met_elias", "value": true}
+        {
+          "type": "set_flag",
+          "flag": "met_elias",
+          "value": true
+        }
       ],
       "responses": [
         {
           "response_id": "ask_status",
           "text": "That's me. I'd like to hear how the ship is doing.",
-          "next_node": "status"
+          "next_node": "status",
+          "effects": [
+            {
+              "type": "change_relationship",
+              "npc_id": "elias_voss",
+              "relationship": "trust",
+              "change": 5
+            }
+          ]
         },
         {
           "response_id": "notice_tone",
           "text": "You don't sound impressed.",
-          "next_node": "skeptic"
+          "next_node": "skeptic",
+          "effects": [
+            {
+              "type": "change_relationship",
+              "npc_id": "elias_voss",
+              "relationship": "bond",
+              "change": 5
+            }
+          ]
         }
       ]
     },
@@ -52,8 +79,14 @@
           "next_node": "signal",
           "conditions": {
             "story_flags": [
-              {"flag": "engineering_log_read", "value": true},
-              {"flag": "signal_disclosed", "value": false}
+              {
+                "flag": "engineering_log_read",
+                "value": true
+              },
+              {
+                "flag": "signal_disclosed",
+                "value": false
+              }
             ]
           }
         },
@@ -62,8 +95,38 @@
           "text": "I'll find out why.",
           "next_node": "quest_given",
           "conditions": {
-            "quests": [{"quest_id": "ch1_main_borrowed_power", "status": "not_started"}],
-            "story_flags": [{"flag": "signal_disclosed", "value": false}]
+            "quests": [
+              {
+                "quest_id": "ch1_main_borrowed_power",
+                "status": "not_started"
+              }
+            ],
+            "story_flags": [
+              {
+                "flag": "signal_disclosed",
+                "value": false
+              }
+            ]
+          }
+        },
+        {
+          "response_id": "ask_theory",
+          "text": "Off the record, Elias. What do you think the signal is?",
+          "next_node": "theory",
+          "conditions": {
+            "story_flags": [
+              {
+                "flag": "signal_disclosed",
+                "value": true
+              }
+            ],
+            "relationships": [
+              {
+                "npc_id": "elias_voss",
+                "type": "trust",
+                "min": 60
+              }
+            ]
           }
         },
         {
@@ -78,7 +141,10 @@
       "speaker_id": "elias_voss",
       "text": "Then start with the engineering log on the terminal by the north wall. If it says where the power goes, come tell me.",
       "effects": [
-        {"type": "start_quest", "quest_id": "ch1_main_borrowed_power"}
+        {
+          "type": "start_quest",
+          "quest_id": "ch1_main_borrowed_power"
+        }
       ],
       "next_node": "goodbye"
     },
@@ -87,7 +153,17 @@
       "speaker_id": "elias_voss",
       "text": "You read that? That's the hydrogen line. Nobody broadcasts there by accident. Keep it between us until I know more.",
       "effects": [
-        {"type": "set_flag", "flag": "signal_disclosed", "value": true}
+        {
+          "type": "set_flag",
+          "flag": "signal_disclosed",
+          "value": true
+        },
+        {
+          "type": "change_relationship",
+          "npc_id": "elias_voss",
+          "relationship": "bond",
+          "change": 5
+        }
       ],
       "next_node": "report_thanks"
     },
@@ -96,12 +172,28 @@
       "speaker_id": "elias_voss",
       "text": "And thanks for actually checking, {player_name}. That's more than upstairs ever did.",
       "conditions": {
-        "quests": [{"quest_id": "ch1_main_borrowed_power", "status": "active"}]
+        "quests": [
+          {
+            "quest_id": "ch1_main_borrowed_power",
+            "status": "active"
+          }
+        ]
       },
       "fallback_node": "goodbye",
       "effects": [
-        {"type": "update_quest", "quest_id": "ch1_main_borrowed_power", "objective_id": "report_to_elias", "status": "completed"}
+        {
+          "type": "update_quest",
+          "quest_id": "ch1_main_borrowed_power",
+          "objective_id": "report_to_elias",
+          "status": "completed"
+        }
       ],
+      "next_node": "goodbye"
+    },
+    {
+      "node_id": "theory",
+      "speaker_id": "elias_voss",
+      "text": "Off the record? Whoever is transmitting knows our launch schedule. The bursts line up with every test of Voyager's reactor.",
       "next_node": "goodbye"
     },
     {

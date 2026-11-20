@@ -38,6 +38,7 @@ func run_tests() -> void:
 func _reset() -> void:
 	QuestManager.reset()
 	StoryFlagManager.reset()
+	RelationshipManager.reset()
 	_events.clear()
 
 
@@ -88,7 +89,11 @@ func _test_validation_rules() -> void:
 			"talk_to objectives need target"],
 		[{"objectives": [{"objective_id": "a", "description": "", "type": "talk_to", "target": "x"}]},
 			"description must be a non-empty string"],
-		[{"prerequisites": {"relationships": []}}, "prerequisites: 'relationships' is not supported yet"],
+		[{"prerequisites": {"items": []}}, "prerequisites: 'items' is not supported yet"],
+		[{"prerequisites": {"relationships": [{"npc_id": "elias_voss", "type": "trust"}]}},
+			"needs min and/or max"],
+		[{"rewards": {"relationships": [{"npc_id": "ghost", "relationship": "bond", "change": 5}]}},
+			"npc_id must be a crew member"],
 		[{"prerequisites": {"quests_completed": "q0"}}, "quests_completed must be an array"],
 		[{"rewards": {"items": []}}, "rewards: 'items' is not supported yet"],
 		[{"rewards": {"story_flags": [{"flag": "f"}]}}, "rewards.story_flags: each entry needs flag and value"],
@@ -150,6 +155,7 @@ func _test_start_and_progress() -> void:
 	check(_events == ["objective:%s/talk" % MAIN, "completed:%s reward=true" % MAIN],
 		"objective then quest_completed, reward applied before the signal (got %s)" % str(_events))
 	check(StoryFlagManager.get_flag("test_reward") == true, "reward story flag set")
+	check(RelationshipManager.get_bond("maya_chen") == 60, "relationship reward applied (bond 50 + 10)")
 	check(QuestManager.get_active_quests().is_empty(), "no longer active")
 	check(QuestManager.get_quest_ids(QuestManager.STATUS_COMPLETED) == [MAIN], "listed as completed")
 
@@ -162,7 +168,12 @@ func _test_follow_up_with_flag_already_set() -> void:
 	section("follow-up quest, flag already set")
 	_events.clear()
 	_set_flag("test_follow", true)
-	check(QuestManager.start_quest(FOLLOW), "quests_completed prerequisite met after completion")
+	RelationshipManager.modify_bond("maya_chen", -1)
+	var logged: Dictionary = capture_log(func() -> bool: return QuestManager.start_quest(FOLLOW))
+	check(logged["result"] == false, "relationship prerequisite blocks the start (bond 59 < 60)")
+	RelationshipManager.modify_bond("maya_chen", 1)
+	_events.clear()
+	check(QuestManager.start_quest(FOLLOW), "quest and relationship prerequisites met (bond 60)")
 	check(QuestManager.is_objective_done(FOLLOW, "already"), "flag set before the start counts immediately")
 	check(QuestManager.get_quest_status(FOLLOW) == QuestManager.STATUS_COMPLETED, "quest completes on start")
 	check(_events[0] == "started:" + FOLLOW and _events[-1].begins_with("completed:" + FOLLOW),
@@ -183,6 +194,7 @@ func _test_failure() -> void:
 	check(logged["result"] == false, "failing twice is refused")
 	check(not StoryFlagManager.has_flag("test_reward") or StoryFlagManager.get_flag("test_reward") == false,
 		"no reward for a failed quest")
+	check(RelationshipManager.get_bond("maya_chen") == 50, "no relationship reward for a failed quest")
 
 
 func _test_reset() -> void:

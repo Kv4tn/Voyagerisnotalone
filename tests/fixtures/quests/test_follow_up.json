@@ -2,9 +2,24 @@
   "quest_id": "test_follow_up",
   "title": "Follow Up",
   "prerequisites": {
-    "quests_completed": ["test_two_steps"]
+    "quests_completed": [
+      "test_two_steps"
+    ],
+    "relationships": [
+      {
+        "npc_id": "maya_chen",
+        "type": "bond",
+        "min": 60
+      }
+    ]
   },
   "objectives": [
-    {"objective_id": "already", "description": "Something done earlier", "type": "story_flag", "flag": "test_follow", "value": true}
+    {
+      "objective_id": "already",
+      "description": "Something done earlier",
+      "type": "story_flag",
+      "flag": "test_follow",
+      "value": true
+    }
   ]
 }

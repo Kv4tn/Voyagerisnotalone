@@ -84,6 +84,7 @@ func _test_valid_name_starts_game(menu: MainMenu) -> void:
 	# Progress from an earlier game that a new game must clear.
 	StoryFlagManager.set_flag("met_elias", true)
 	QuestManager.start_quest("ch1_main_borrowed_power")
+	RelationshipManager.modify_trust("elias_voss", 20)
 	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_ACTIVE,
 		"old game has an active quest")
 
@@ -102,6 +103,7 @@ func _test_valid_name_starts_game(menu: MainMenu) -> void:
 	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
 		"new game resets quests")
 	check(_story_flags.get_flag("met_elias") == false, "new game resets story flags from the old game")
+	check(RelationshipManager.get_trust("elias_voss") == 40, "new game resets relationships to starting values")
 
 	var finished: bool = await wait_for_transition()
 	check(finished, "transition finished")

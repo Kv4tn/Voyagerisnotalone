@@ -3,10 +3,10 @@
 # Holds no UI: DialogueBox listens to the signals and calls advance()/choose().
 # Autoload singleton: res://scripts/core/dialogue_manager.gd
 #
-# Supported now (docs/dialogue-format.md): conditions on story flags and quest
-# status, effects set_flag / start_quest / update_quest, {player_name} and
-# {npc_name} in text, fallback_node for skipped nodes. Relationship conditions
-# and effects arrive with RelationshipManager; the validator rejects them.
+# Supported now (docs/dialogue-format.md): conditions on story flags, quest
+# status and crew trust/bond; effects set_flag, start_quest, update_quest,
+# change_relationship; {player_name} and {npc_name} in text; fallback_node
+# for skipped nodes.
 extends Node
 
 # ============================================================================
@@ -24,8 +24,9 @@ signal dialogue_ended()
 # ============================================================================
 
 const PLAYER_SPEAKER_ID: String = "player"
-const SUPPORTED_CONDITION_KEYS: PackedStringArray = ["story_flags", "quests"]
-const SUPPORTED_EFFECT_TYPES: PackedStringArray = ["set_flag", "start_quest", "update_quest"]
+const SUPPORTED_CONDITION_KEYS: PackedStringArray = ["story_flags", "quests", "relationships"]
+const SUPPORTED_EFFECT_TYPES: PackedStringArray = [
+	"set_flag", "start_quest", "update_quest", "change_relationship"]
 ## update_quest can only complete objectives for now.
 const UPDATE_QUEST_STATUSES: PackedStringArray = ["completed"]
 # Unknown keys are rejected so a typo ("next_nod") fails loudly instead of
@@ -256,6 +257,9 @@ func _conditions_met(conditions: Dictionary) -> bool:
 	for check: Dictionary in conditions.get("quests", []):
 		if QuestManager.get_quest_status(check["quest_id"]) != check["status"]:
 			return false
+	for check: Dictionary in conditions.get("relationships", []):
+		if not RelationshipManager.check_met(check):
+			return false
 	return true
 
 func _apply_effects(effects: Array) -> void:
@@ -267,6 +271,8 @@ func _apply_effects(effects: Array) -> void:
 				QuestManager.start_quest(effect["quest_id"])
 			"update_quest":
 				QuestManager.complete_objective(effect["quest_id"], effect["objective_id"])
+			"change_relationship":
+				RelationshipManager.apply_change(effect)
 
 static func _validate_node(node: Dictionary, ids: Dictionary, errors: PackedStringArray) -> void:
 	var where: String = "node '%s'" % node["node_id"]
@@ -308,7 +314,7 @@ static func _validate_conditions(conditions: Variant, where: String, errors: Pac
 		errors.append(where + ": conditions must be an object")
 		return
 	for key: Variant in conditions:
-		if not key in SUPPORTED_CONDITION_KEYS:
+		if not _is_one_of(key, SUPPORTED_CONDITION_KEYS):
 			errors.append(where + ": condition '%s' is not supported yet" % key)
 	var flags: Variant = conditions.get("story_flags", [])
 	if not flags is Array:
@@ -320,19 +326,27 @@ static func _validate_conditions(conditions: Variant, where: String, errors: Pac
 	var quests: Variant = conditions.get("quests", [])
 	if not quests is Array:
 		errors.append(where + ": quests must be an array")
+	else:
+		for check: Variant in quests:
+			if (not check is Dictionary or not _is_non_empty_string(check.get("quest_id"))
+					or not _is_one_of(check.get("status"), QuestManager.STATUSES)):
+				errors.append(where + ": each quests entry needs quest_id and status (%s)"
+					% ", ".join(QuestManager.STATUSES))
+	var relationships: Variant = conditions.get("relationships", [])
+	if not relationships is Array:
+		errors.append(where + ": relationships must be an array")
 		return
-	for check: Variant in quests:
-		if (not check is Dictionary or not _is_non_empty_string(check.get("quest_id"))
-				or not check.get("status") in QuestManager.STATUSES):
-			errors.append(where + ": each quests entry needs quest_id and status (%s)"
-				% ", ".join(QuestManager.STATUSES))
+	for check: Variant in relationships:
+		var problem: String = RelationshipManager.validate_check(check)
+		if not problem.is_empty():
+			errors.append(where + ": " + problem)
 
 static func _validate_effects(effects: Variant, where: String, errors: PackedStringArray) -> void:
 	if not effects is Array:
 		errors.append(where + ": effects must be an array")
 		return
 	for effect: Variant in effects:
-		if not effect is Dictionary or not effect.get("type") in SUPPORTED_EFFECT_TYPES:
+		if not effect is Dictionary or not _is_one_of(effect.get("type"), SUPPORTED_EFFECT_TYPES):
 			var type_name: String = str(effect.get("type")) if effect is Dictionary else "?"
 			errors.append(where + ": effect type '%s' is not supported yet" % type_name)
 			continue
@@ -346,14 +360,23 @@ static func _validate_effects(effects: Variant, where: String, errors: PackedStr
 			"update_quest":
 				if (not _is_non_empty_string(effect.get("quest_id"))
 						or not _is_non_empty_string(effect.get("objective_id"))
-						or not effect.get("status") in UPDATE_QUEST_STATUSES):
+						or not _is_one_of(effect.get("status"), UPDATE_QUEST_STATUSES)):
 					errors.append(where + ": update_quest needs quest_id, objective_id and status \"completed\"")
+			"change_relationship":
+				var problem: String = RelationshipManager.validate_change(effect)
+				if not problem.is_empty():
+					errors.append(where + ": " + problem)
 
 static func _check_keys(object: Dictionary, allowed: PackedStringArray, where: String,
 		errors: PackedStringArray) -> void:
 	for key: Variant in object:
-		if not key in allowed:
+		if not _is_one_of(key, allowed):
 			errors.append(where + ": unknown field '%s'" % key)
+
+## `x in PackedStringArray` is a runtime error when x is not a String
+## (e.g. a missing JSON field), so data from files is checked with this.
+static func _is_one_of(value: Variant, allowed: PackedStringArray) -> bool:
+	return value is String and allowed.has(value)
 
 static func _is_non_empty_string(value: Variant) -> bool:
 	return value is String and not (value as String).is_empty()

@@ -13,6 +13,7 @@ var _player: PlayerController = null
 var _hud: GameHud = null
 var _box: DialogueBox = null
 var _tracker: QuestTracker = null
+var _toast: RelationshipToast = null
 var _elias: NPCController = null
 
 
@@ -20,6 +21,7 @@ func run_tests() -> void:
 	StoryFlagManager.reset()
 	DialogueManager.reset()
 	QuestManager.reset()
+	RelationshipManager.reset()
 	GameState.player_name = "Asel"
 
 	_room = (load(ROOM_SCENE) as PackedScene).instantiate()
@@ -28,6 +30,7 @@ func run_tests() -> void:
 	_hud = _room.get_node("HUD") as GameHud
 	_box = _room.get_node("HUD/DialogueBox") as DialogueBox
 	_tracker = _room.get_node("HUD/QuestTracker") as QuestTracker
+	_toast = _room.get_node("HUD/RelationshipToast") as RelationshipToast
 	_elias = _room.get_node("EliasVoss") as NPCController
 	await physics_frames(2)
 
@@ -43,7 +46,11 @@ func _test_receive_quest() -> void:
 	await _stand_below(_elias, 25.0)
 	await _press_e()  # start
 	await _press_e()  # finish typing greeting
+	check(RelationshipManager.get_trust("elias_voss") == 40, "Elias starts with trust 40 from data/npcs")
 	await _press_e()  # "That's me. I'd like to hear how the ship is doing."
+	check(RelationshipManager.get_trust("elias_voss") == 45, "asking about the ship: trust +5")
+	check(_toast.get_lines() == PackedStringArray(["Elias Voss: Trust +5"]),
+		"notice shows the change (got %s)" % str(_toast.get_lines()))
 	await _press_e()  # finish typing status
 	var buttons: Array[Button] = _box.get_choice_buttons()
 	check(buttons.size() == 2 and buttons[0].text == "1. I'll find out why.", "quest is offered")
@@ -104,6 +111,10 @@ func _test_report_completes_quest() -> void:
 	check(QuestManager.get_quest_status(QUEST_ID) == QuestManager.STATUS_COMPLETED, "quest completed")
 	check(StoryFlagManager.get_flag("power_draw_investigated") == true, "reward flag set")
 	check(StoryFlagManager.get_flag("signal_disclosed") == true, "signal_disclosed set")
+	check(RelationshipManager.get_bond("elias_voss") == 55, "sharing the log: bond +5")
+	check(RelationshipManager.get_trust("elias_voss") == 60, "quest reward: trust +15 (45 -> 60)")
+	check(_toast.get_lines().has("Elias Voss: Bond +5") and _toast.get_lines().has("Elias Voss: Trust +15"),
+		"notices for both changes (got %s)" % str(_toast.get_lines()))
 	check(_tracker.get_lines() == PackedStringArray(["Borrowed Power  COMPLETE"]),
 		"tracker shows the quest as complete (got %s)" % str(_tracker.get_lines()))
 	await _close_remaining_lines()
@@ -120,10 +131,15 @@ func _test_after_completion() -> void:
 	await _press_e()
 	await _press_e()
 	await _press_e()
+	check(_toast.get_lines().is_empty(), "notices disappear after a few seconds")
 	var buttons: Array[Button] = _box.get_choice_buttons()
-	check(buttons.size() == 1 and buttons[0].text == "1. I'll leave you to it.",
-		"no quest offer or signal question after completion (got %d choices)" % buttons.size())
-	await _press_e()
+	check(buttons.size() == 2 and buttons[0].text.begins_with("1. Off the record, Elias")
+		and buttons[1].text == "2. I'll leave you to it.",
+		"trust 60 unlocks the off-the-record question; quest offer and signal question gone (got %d)"
+			% buttons.size())
+	await _press_e()  # ask off the record
+	check(_text().begins_with("Off the record? Whoever is transmitting knows our launch schedule."),
+		"Elias shares his theory")
 	await _close_remaining_lines()
 
 

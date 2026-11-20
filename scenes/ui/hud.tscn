@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/ui/dialogue_box.gd" id="2_dialogue"]
 [ext_resource type="Theme" path="res://scenes/ui/theme/voyager_theme.tres" id="3_theme"]
 [ext_resource type="Script" path="res://scripts/ui/quest_tracker.gd" id="4_tracker"]
+[ext_resource type="Script" path="res://scripts/ui/relationship_toast.gd" id="5_toast"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 8.0
@@ -54,6 +55,19 @@ offset_bottom = 120.0
 grow_horizontal = 0
 theme_override_constants/separation = 1
 script = ExtResource("4_tracker")
+
+[node name="RelationshipToast" type="VBoxContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 20.0
+offset_right = 100.0
+offset_bottom = 80.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+script = ExtResource("5_toast")
 
 [node name="PromptPanel" type="PanelContainer" parent="."]
 anchors_preset = 7

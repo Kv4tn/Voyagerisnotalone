@@ -7,8 +7,8 @@
 # Supported now (docs/quest-format.md):
 #   objective types: story_flag (completes itself when a flag has a value),
 #                    talk_to (completed by the dialogue effect update_quest)
-#   prerequisites:   story_flags, quests_completed
-#   rewards:         story_flags
+#   prerequisites:   story_flags, quests_completed, relationships (trust/bond min/max)
+#   rewards:         story_flags, relationships (trust/bond changes)
 extends Node
 
 # ============================================================================
@@ -45,8 +45,8 @@ const ROOT_KEYS: PackedStringArray = [
 	"prerequisites", "objectives", "rewards", "comment"]
 const OBJECTIVE_KEYS: PackedStringArray = [
 	"objective_id", "description", "type", "target", "flag", "value", "optional", "comment"]
-const PREREQUISITE_KEYS: PackedStringArray = ["story_flags", "quests_completed"]
-const REWARD_KEYS: PackedStringArray = ["story_flags"]
+const PREREQUISITE_KEYS: PackedStringArray = ["story_flags", "quests_completed", "relationships"]
+const REWARD_KEYS: PackedStringArray = ["story_flags", "relationships"]
 
 # ============================================================================
 # PUBLIC VARIABLES
@@ -189,6 +189,9 @@ func prerequisites_met(quest_id: String) -> bool:
 	for required: String in prerequisites.get("quests_completed", []):
 		if get_quest_status(required) != STATUS_COMPLETED:
 			return false
+	for relationship_check: Dictionary in prerequisites.get("relationships", []):
+		if not RelationshipManager.check_met(relationship_check):
+			return false
 	return true
 
 func get_definition(quest_id: String) -> Dictionary:
@@ -240,7 +243,7 @@ static func validate_quest(data: Variant, expected_id: String = "") -> PackedStr
 		errors.append("title must be a non-empty string")
 	if data.has("description") and not data["description"] is String:
 		errors.append("description must be a string")
-	if data.has("category") and not data["category"] in CATEGORIES:
+	if data.has("category") and not _is_one_of(data["category"], CATEGORIES):
 		errors.append("category must be one of %s" % ", ".join(CATEGORIES))
 
 	_validate_prerequisites(data.get("prerequisites", {}), errors)
@@ -272,8 +275,11 @@ func _complete_quest(quest_id: String) -> void:
 	print("QuestManager: completed '%s'" % quest_id)
 	# Status changes before rewards, so reward flags that start follow-up
 	# quests already see this quest as completed.
-	for reward: Dictionary in get_definition(quest_id).get("rewards", {}).get("story_flags", []):
+	var rewards: Dictionary = get_definition(quest_id).get("rewards", {})
+	for reward: Dictionary in rewards.get("story_flags", []):
 		StoryFlagManager.set_flag(reward["flag"], reward["value"])
+	for reward: Dictionary in rewards.get("relationships", []):
+		RelationshipManager.apply_change(reward)
 	quest_completed.emit(quest_id)
 	quest_updated.emit(quest_id)
 
@@ -287,7 +293,7 @@ static func _validate_prerequisites(prerequisites: Variant, errors: PackedString
 		errors.append("prerequisites must be an object")
 		return
 	for key: Variant in prerequisites:
-		if not key in PREREQUISITE_KEYS:
+		if not _is_one_of(key, PREREQUISITE_KEYS):
 			errors.append("prerequisites: '%s' is not supported yet" % key)
 	_validate_flag_list(prerequisites.get("story_flags", []), "prerequisites.story_flags", errors)
 	var required: Variant = prerequisites.get("quests_completed", [])
@@ -297,6 +303,8 @@ static func _validate_prerequisites(prerequisites: Variant, errors: PackedString
 	for entry: Variant in required:
 		if not _is_non_empty_string(entry):
 			errors.append("prerequisites.quests_completed must contain quest id strings")
+	_validate_list(prerequisites.get("relationships", []), "prerequisites.relationships",
+		RelationshipManager.validate_check, errors)
 
 static func _validate_objectives(objectives: Variant, errors: PackedStringArray) -> void:
 	if not objectives is Array or (objectives as Array).is_empty():
@@ -342,9 +350,11 @@ static func _validate_rewards(rewards: Variant, errors: PackedStringArray) -> vo
 		errors.append("rewards must be an object")
 		return
 	for key: Variant in rewards:
-		if not key in REWARD_KEYS:
+		if not _is_one_of(key, REWARD_KEYS):
 			errors.append("rewards: '%s' is not supported yet" % key)
 	_validate_flag_list(rewards.get("story_flags", []), "rewards.story_flags", errors)
+	_validate_list(rewards.get("relationships", []), "rewards.relationships",
+		RelationshipManager.validate_change, errors)
 
 static func _validate_flag_list(entries: Variant, where: String, errors: PackedStringArray) -> void:
 	if not entries is Array:
@@ -354,11 +364,26 @@ static func _validate_flag_list(entries: Variant, where: String, errors: PackedS
 		if not entry is Dictionary or not _is_non_empty_string(entry.get("flag")) or not entry.has("value"):
 			errors.append(where + ": each entry needs flag and value")
 
+static func _validate_list(entries: Variant, where: String, validator: Callable,
+		errors: PackedStringArray) -> void:
+	if not entries is Array:
+		errors.append(where + " must be an array")
+		return
+	for entry: Variant in entries:
+		var problem: String = validator.call(entry)
+		if not problem.is_empty():
+			errors.append(where + ": " + problem)
+
 static func _check_keys(object: Dictionary, allowed: PackedStringArray, where: String,
 		errors: PackedStringArray) -> void:
 	for key: Variant in object:
-		if not key in allowed:
+		if not _is_one_of(key, allowed):
 			errors.append(where + ": unknown field '%s'" % key)
+
+## `x in PackedStringArray` is a runtime error when x is not a String
+## (e.g. a missing JSON field), so data from files is checked with this.
+static func _is_one_of(value: Variant, allowed: PackedStringArray) -> bool:
+	return value is String and allowed.has(value)
 
 static func _is_non_empty_string(value: Variant) -> bool:
 	return value is String and not (value as String).is_empty()

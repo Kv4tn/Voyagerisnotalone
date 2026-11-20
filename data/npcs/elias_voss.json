@@ -7,7 +7,8 @@
     "prologue": "res://data/dialogues/elias_voss_prologue.json"
   },
   "initial_relationships": {
-    "trust": 50,
+    "trust": 40,
     "bond": 50
-  }
+  },
+  "comment": "Starts with low trust: Elias distrusts mission leadership."
 }

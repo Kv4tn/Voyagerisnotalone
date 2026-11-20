@@ -18,6 +18,7 @@ func run_tests() -> void:
 	StoryFlagManager.reset()
 	DialogueManager.reset()
 	QuestManager.reset()
+	RelationshipManager.reset()
 	GameState.player_name = "Asel"
 
 	_room = (load(ROOM_SCENE) as PackedScene).instantiate()
@@ -32,6 +33,7 @@ func run_tests() -> void:
 	await _test_first_conversation()
 	await _test_read_terminal()
 	await _test_repeat_visit_with_signal_question()
+	await _test_low_trust_hides_theory()
 
 
 # ----------------------------------------------------------------------------
@@ -99,6 +101,8 @@ func _test_first_conversation() -> void:
 	await process_frames(3)
 	check(not DialogueManager.is_dialogue_active, "closing press does not restart the dialogue")
 	check(StoryFlagManager.get_flag("signal_disclosed") == false, "signal_disclosed still false")
+	check(RelationshipManager.get_bond("elias_voss") == 55 and RelationshipManager.get_trust("elias_voss") == 40,
+		"commenting on his tone: bond +5, trust unchanged")
 	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
 		"leaving does not start Elias's quest")
 
@@ -139,6 +143,23 @@ func _test_repeat_visit_with_signal_question() -> void:
 	check(not DialogueManager.is_dialogue_active, "dialogue closed after goodbye")
 	check(QuestManager.get_quest_status("ch1_main_borrowed_power") == QuestManager.STATUS_NOT_STARTED,
 		"asking about the signal without the quest leaves the quest unstarted")
+
+
+func _test_low_trust_hides_theory() -> void:
+	section("low trust hides the off-the-record question")
+	check(RelationshipManager.get_trust("elias_voss") == 40, "trust still 40 without the quest")
+	await _wait_cooldown()
+	await _press_e()
+	await _press_e()
+	await _press_e()
+	await _press_e()
+	var buttons: Array[Button] = _box.get_choice_buttons()
+	check(buttons.size() == 1 and buttons[0].text == "1. I'll leave you to it.",
+		"trust 40 < 60: theory hidden even though the signal is disclosed (got %d)" % buttons.size())
+	await _press_e()
+	await _press_e()
+	await _press_e()
+	check(not DialogueManager.is_dialogue_active, "dialogue closed")
 
 
 # ----------------------------------------------------------------------------

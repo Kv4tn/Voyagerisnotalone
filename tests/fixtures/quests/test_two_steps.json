@@ -4,14 +4,48 @@
   "description": "Fixture for tests/unit/test_quest_manager.gd. Not game content.",
   "category": "side",
   "prerequisites": {
-    "story_flags": [{"flag": "test_ready", "value": true}]
+    "story_flags": [
+      {
+        "flag": "test_ready",
+        "value": true
+      }
+    ]
   },
   "objectives": [
-    {"objective_id": "find", "description": "Find it", "type": "story_flag", "flag": "test_found", "value": true},
-    {"objective_id": "talk", "description": "Talk about it", "type": "talk_to", "target": "elias_voss"},
-    {"objective_id": "extra", "description": "Bonus chat", "type": "talk_to", "target": "elias_voss", "optional": true}
+    {
+      "objective_id": "find",
+      "description": "Find it",
+      "type": "story_flag",
+      "flag": "test_found",
+      "value": true
+    },
+    {
+      "objective_id": "talk",
+      "description": "Talk about it",
+      "type": "talk_to",
+      "target": "elias_voss"
+    },
+    {
+      "objective_id": "extra",
+      "description": "Bonus chat",
+      "type": "talk_to",
+      "target": "elias_voss",
+      "optional": true
+    }
   ],
   "rewards": {
-    "story_flags": [{"flag": "test_reward", "value": true}]
+    "story_flags": [
+      {
+        "flag": "test_reward",
+        "value": true
+      }
+    ],
+    "relationships": [
+      {
+        "npc_id": "maya_chen",
+        "relationship": "bond",
+        "change": 10
+      }
+    ]
   }
 }
