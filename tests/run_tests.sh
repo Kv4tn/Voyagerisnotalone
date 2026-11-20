@@ -43,11 +43,13 @@ for test_file in "${tests[@]}"; do
     wait "$pid"
     status=$?
     summary="$(grep 'checks passed' "$log" | tail -1)"
-    if [ "$status" -eq 0 ] && ! grep -qE "SCRIPT ERROR|^ERROR:" "$log"; then
+    # Tests fail themselves on unexpected errors (tests/support/base_test.gd);
+    # a nonzero exit also covers scripts that did not compile or load.
+    if [ "$status" -eq 0 ]; then
         echo "OK       $test_file  ($summary)"
     else
         echo "FAILED   $test_file  (exit $status; $summary)"
-        grep -E "  FAIL |SCRIPT ERROR|^ERROR:" "$log" | sed 's/^/         /'
+        grep -E "  FAIL |SCRIPT ERROR|^ERROR:" "$log" | sort -u | sed 's/^/         /'
         failed=$((failed + 1))
     fi
     if [ -n "${VERBOSE:-}" ]; then sed 's/^/    | /' "$log"; fi

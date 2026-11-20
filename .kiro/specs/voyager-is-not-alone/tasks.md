@@ -273,6 +273,7 @@ graph TD
 
 
 - [ ] 2.5. Interaction System - Execution [MVP]
+  - **Status 2026-11-20**: NPC interaction starts dialogue and locks movement, verified by `tests/integration/test_dialogue_in_room.gd`.
   - **Status 2026-11-17**: partial, verified by test: E on a terminal opens a message box, movement is locked while it is open, E/Esc closes it, 0.2 s cooldown prevents the closing press from reopening it. Not done: NPC, door and quest-object interactions, audio feedback.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
@@ -332,6 +333,7 @@ graph TD
 
 
 - [ ] 3.1. NPC Controller Base [MVP]
+  - **Status 2026-11-20**: partial, verified by `tests/integration/test_dialogue_in_room.gd` and `tests/content/test_dialogue_content.gd`: `scenes/npcs/npc_base.tscn` + `scripts/components/npc_controller.gd` (CharacterBody2D with collision, composes an `Interactable` child instead of inheriting it), `npc_id`/`display_name` from metadata, prompt "[E] Talk to <name>", E starts the NPC's dialogue. Not done: AnimatedSprite2D and idle animation (placeholder polygons); `face_towards()` exists but is not tested.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 2.1
@@ -359,6 +361,7 @@ graph TD
 
 
 - [ ] 3.2. NPC Metadata System [MVP]
+  - **Status 2026-11-20**: partial. `NpcRegistry` loads and caches `data/npcs/<npc_id>.json` (design.md 4.3 subset: npc_id, display_name, role, description, dialogue_files, initial_relationships); missing files fall back to a readable name; parse errors give file and line; validated by the content check. Only `elias_voss.json` exists. Not done: metadata for Maya, Nora, Daniel; initial_position/spawn data; initial_relationships is stored but not read yet (3.7).
   - **Owner**: Dev 1
   - **Estimated**: 2 hours
   - **Dependencies**: 3.1
@@ -382,7 +385,8 @@ graph TD
     7. Test loading all crew member metadata
 
 
-- [ ] 3.3. DialogueManager Singleton - Core [MVP]
+- [x] 3.3. DialogueManager Singleton - Core [MVP]
+  - **Status 2026-11-20**: acceptance criteria verified by `tests/unit/test_dialogue_manager.gd` (48 checks) and `tests/integration/test_dialogue_in_room.gd` (34 checks). API is `start_dialogue(dialogue_path, npc_id)` as in design.md 3.5, not `start_dialogue(npc_id)`. Dialogue box lives in the HUD (`scripts/ui/dialogue_box.gd`) with a typewriter effect, E/Enter to skip or continue, arrow keys between choices. Not done: subtask 10 (slide in/out animation).
   - **Owner**: Dev 1
   - **Estimated**: 6 hours
   - **Dependencies**: 1.2, 3.1
@@ -412,6 +416,7 @@ graph TD
 
 
 - [ ] 3.4. Dialogue JSON Loader [MVP]
+  - **Status 2026-11-20**: partial, verified by the unit and content tests: loads from `data/dialogues/`, validates structure and every node reference, rejects unknown fields, caches trees (`clear_cache()` forces a reload), errors name file and line. The format follows design.md 3.5 (fields such as responses/next_node/conditions) rather than the TEXT/CHOICE/BRANCH/ACTION/END node types listed here; documented in `docs/dialogue-format.md`. Not done: automatic hot-reload while the game runs.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 3.3
@@ -437,6 +442,7 @@ graph TD
 
 
 - [ ] 3.5. Dialogue Conditions and Branching [MVP]
+  - **Status 2026-11-20**: partial, verified by tests: story-flag conditions on nodes and on choices, AND logic, `fallback_node` when a node's conditions fail, loop protection. Not done: relationship conditions (needs 3.7), quest conditions (needs 4.1), debug logging of condition results; the validator rejects these keys until then.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 3.4, 1.5

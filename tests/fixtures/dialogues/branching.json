@@ -1,0 +1,41 @@
+{
+  "dialogue_id": "test_branching",
+  "comment": "Fixture for tests/unit/test_dialogue_manager.gd. Not game content.",
+  "start_node": "intro_known",
+  "nodes": [
+    {
+      "node_id": "intro_known",
+      "speaker_id": "elias_voss",
+      "text": "Welcome back, {player_name}.",
+      "conditions": {"story_flags": [{"flag": "test_met", "value": true}]},
+      "fallback_node": "intro_new",
+      "next_node": "question"
+    },
+    {
+      "node_id": "intro_new",
+      "speaker_id": "elias_voss",
+      "text": "I am {npc_name}. You are {player_name}.",
+      "effects": [{"type": "set_flag", "flag": "test_met", "value": true}],
+      "next_node": "question"
+    },
+    {
+      "node_id": "question",
+      "speaker_id": "player",
+      "text": "Choose.",
+      "responses": [
+        {
+          "text": "Always visible",
+          "next_node": "after_a",
+          "effects": [{"type": "set_flag", "flag": "test_choice", "value": "a"}]
+        },
+        {
+          "text": "Needs secret",
+          "next_node": "after_b",
+          "conditions": {"story_flags": [{"flag": "test_secret", "value": true}]}
+        }
+      ]
+    },
+    {"node_id": "after_a", "speaker_id": "ghost_unit", "text": "Picked A."},
+    {"node_id": "after_b", "speaker_id": "elias_voss", "text": "Picked B."}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "dialogue_id": "test_bad_reference",
+  "start_node": "missing_start",
+  "nodes": [
+    {"node_id": "only", "speaker_id": "elias_voss", "text": "Hi", "next_node": "nowhere"}
+  ]
+}

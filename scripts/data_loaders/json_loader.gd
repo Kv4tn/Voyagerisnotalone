@@ -14,6 +14,8 @@ static func load_file(path: String) -> Variant:
 	var json: JSON = JSON.new()
 	var error: Error = json.parse(text)
 	if error != OK:
-		push_error("JsonLoader: %s line %d: %s" % [path, json.get_error_line(), json.get_error_message()])
+		# get_error_line() counts from 0; editors count from 1.
+		push_error("JsonLoader: %s line %d: %s" % [
+			path, json.get_error_line() + 1, json.get_error_message()])
 		return null
 	return json.data

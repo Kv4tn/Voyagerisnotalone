@@ -1,0 +1,21 @@
+{
+  "dialogue_id": "test_fallback_loop",
+  "comment": "Both nodes fail their condition and point at each other.",
+  "start_node": "a",
+  "nodes": [
+    {
+      "node_id": "a",
+      "speaker_id": "elias_voss",
+      "text": "A",
+      "conditions": {"story_flags": [{"flag": "test_never", "value": true}]},
+      "fallback_node": "b"
+    },
+    {
+      "node_id": "b",
+      "speaker_id": "elias_voss",
+      "text": "B",
+      "conditions": {"story_flags": [{"flag": "test_never", "value": true}]},
+      "fallback_node": "a"
+    }
+  ]
+}

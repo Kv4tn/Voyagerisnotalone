@@ -1,0 +1,7 @@
+{
+  "dialogue_id": "test_malformed",
+  "start_node": "a",
+  "nodes": [
+    {"node_id": "a" "speaker_id": "elias_voss"}
+  ]
+}

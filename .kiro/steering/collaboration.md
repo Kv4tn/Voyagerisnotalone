@@ -238,6 +238,11 @@ Both developers use these flags. Add new flags to this shared list:
 - `preflight_checklist_started`
 - `preflight_checklist_complete`
 - `launch_authorized`
+- `engineering_log_read` - set by the engineering log terminal (prototype room)
+- `signal_disclosed` - Elias shared what he knows about the 1420 MHz transmission
+
+The code list is `initialize_default_flags()` in `scripts/core/story_flag_manager.gd`;
+`tests/content/test_dialogue_content.gd` fails on dialogue flags missing from it.
 
 **Chapter 2+ Flags** (TBD during development)
 
