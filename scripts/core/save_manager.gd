@@ -28,8 +28,8 @@ const SAVE_VERSION: int = 1
 const SAVE_DIR: String = "user://saves/"
 const MAX_SAVE_SLOTS: int = 3
 const ROOT_KEYS: PackedStringArray = [
-	"version", "timestamp", "playtime_seconds", "player_data", "story_data", "quest_data",
-	"relationship_data"]
+	"version", "timestamp", "saved_unix", "playtime_seconds", "player_data", "story_data",
+	"quest_data", "relationship_data"]
 const PLAYER_KEYS: PackedStringArray = ["name", "chapter", "current_scene", "position"]
 
 # ============================================================================
@@ -47,6 +47,8 @@ var last_error: String = ""
 
 var _pending_position: Vector2 = Vector2.ZERO
 var _pending_slot: int = 0
+## Progress fingerprint at the last save, load or new game ("" = none yet).
+var _clean_fingerprint: String = ""
 
 # ============================================================================
 # GODOT LIFECYCLE METHODS
@@ -54,6 +56,7 @@ var _pending_slot: int = 0
 
 func _ready() -> void:
 	ensure_save_directory()
+	GameState.new_game_started.connect(mark_progress_saved)
 	print("SaveManager: Ready")
 
 # ============================================================================
@@ -116,6 +119,7 @@ func save_game(slot: int) -> bool:
 		return _fail("Could not replace the old save (%s)." % error_string(rename_error))
 
 	print("SaveManager: saved slot %d to %s" % [slot, ProjectSettings.globalize_path(path)])
+	mark_progress_saved()
 	game_saved.emit(slot)
 	return true
 
@@ -141,6 +145,7 @@ func load_game(slot: int) -> bool:
 
 	var data: Dictionary = result["data"]
 	restore_state(data)
+	mark_progress_saved()
 	var player_data: Dictionary = data["player_data"]
 	_pending_position = Vector2(player_data["position"]["x"], player_data["position"]["y"])
 	_pending_slot = slot
@@ -174,14 +179,46 @@ func get_slot_info(slot: int) -> Dictionary:
 	info["chapter"] = data["player_data"]["chapter"]
 	info["playtime_seconds"] = data["playtime_seconds"]
 	info["timestamp"] = data["timestamp"]
+	info["saved_unix"] = data["saved_unix"]
 	info["scene"] = data["player_data"]["current_scene"]
 	return info
+
+func get_latest_slot() -> int:
+	"""Slot with the most recent valid save, or 0 if there is none (for Continue)."""
+	var latest: int = 0
+	var latest_time: float = -1.0
+	for slot: int in range(1, MAX_SAVE_SLOTS + 1):
+		var info: Dictionary = get_slot_info(slot)
+		if info["valid"] and float(info["saved_unix"]) > latest_time:
+			latest = slot
+			latest_time = float(info["saved_unix"])
+	return latest
+
+func has_any_save() -> bool:
+	for slot: int in range(1, MAX_SAVE_SLOTS + 1):
+		if has_save(slot):
+			return true
+	return false
+
+func has_unsaved_progress() -> bool:
+	"""
+	True when story flags, quests, relationships, name or chapter changed since
+	the last save, load or new game. Walking around and playtime do not count.
+	"""
+	if not GameState.game_started:
+		return false
+	return _progress_fingerprint() != _clean_fingerprint
+
+func mark_progress_saved() -> void:
+	"""Treat the current progress as saved (after saving, loading, a new game)."""
+	_clean_fingerprint = _progress_fingerprint()
 
 func build_save_data(scene_path: String, player_position: Vector2) -> Dictionary:
 	"""Collect the whole game state into the save format (no file access)."""
 	return {
 		"version": SAVE_VERSION,
 		"timestamp": Time.get_datetime_string_from_system(),
+		"saved_unix": Time.get_unix_time_from_system(),
 		"playtime_seconds": GameState.game_time,
 		"player_data": {
 			"name": GameState.player_name,
@@ -272,6 +309,9 @@ func _validate(data: Dictionary, errors: PackedStringArray) -> void:
 
 	if not data["timestamp"] is String:
 		errors.append("timestamp must be text")
+	var saved_unix: Variant = data["saved_unix"]
+	if not (saved_unix is float or saved_unix is int) or not is_finite(saved_unix) or saved_unix < 0:
+		errors.append("saved_unix must be a number of seconds, 0 or more")
 	var playtime: Variant = data["playtime_seconds"]
 	if not (playtime is float or playtime is int) or not is_finite(playtime) or playtime < 0:
 		errors.append("playtime_seconds must be a number of seconds, 0 or more")
@@ -330,6 +370,14 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 	#   if from_version < 2: data["new_field"] = default; from_version = 2
 	assert(from_version <= SAVE_VERSION)
 	return data
+
+func _progress_fingerprint() -> String:
+	var data: Dictionary = build_save_data("", Vector2.ZERO)
+	for key: String in ["timestamp", "saved_unix", "playtime_seconds"]:
+		data.erase(key)
+	data["player_data"].erase("position")
+	data["player_data"].erase("current_scene")
+	return JSON.stringify(data, "", true, true)
 
 func _find_player() -> Node2D:
 	var scene: Node = get_tree().current_scene

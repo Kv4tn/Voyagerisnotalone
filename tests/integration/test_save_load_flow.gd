@@ -74,7 +74,8 @@ func _test_progress_and_pause_rules() -> void:
 	tap_action(&"ui_cancel")
 	await process_frames(2)
 	check(pause.is_open() and get_tree().paused, "Esc opens the pause menu and pauses the game")
-	check(pause.get_status_text() == "Slot 1 is empty.", "status shows the empty slot")
+	check(pause.get_status_text() == "No saved games yet.\nUnsaved progress.",
+		"status: no saves, unsaved progress (got \"%s\")" % pause.get_status_text())
 	check((pause.get_node("%LoadButton") as Button).disabled, "Load disabled without a save")
 	check(root.gui_get_focus_owner() == pause.get_node("%ResumeButton"), "Resume focused")
 	Input.action_press("move_left")
@@ -86,13 +87,19 @@ func _test_progress_and_pause_rules() -> void:
 func _test_save_from_pause_menu() -> void:
 	section("save from the pause menu")
 	var pause: PauseMenu = get_tree().current_scene.get_node("HUD/PauseMenu")
+	var slots: SaveSlotsPanel = pause.get_slots_panel()
 	tap_action(&"ui_down")
 	await process_frames(1)
 	check(root.gui_get_focus_owner() == pause.get_node("%SaveButton"), "Down moves to Save Game")
 	await _press(&"ui_accept")
+	check(slots.is_open() and slots.get_mode() == SaveSlotsPanel.MODE_SAVE, "Save Game opens the slot screen")
+	check(root.gui_get_focus_owner() == slots.get_slot_button(1), "slot 1 focused")
+	await _press(&"ui_accept")
 	check(SaveManager.has_save(1), "slot 1 written")
-	check(pause.get_status_text().begins_with("Saved. Slot 1: CMDR ASEL · Chapter 1 · "),
+	check(not slots.is_open() and pause.is_open(), "back in the pause menu after saving")
+	check(pause.get_status_text().begins_with("Saved to slot 1.\nLast save: slot 1 · CMDR ASEL · Chapter 1 · "),
 		"status confirms the save (got \"%s\")" % pause.get_status_text())
+	check(not SaveManager.has_unsaved_progress(), "no unsaved progress right after saving")
 	check(not (pause.get_node("%LoadButton") as Button).disabled, "Load enabled after saving")
 	check(not FileAccess.file_exists(SaveManager.slot_path(1) + ".tmp"), "no temporary file left behind")
 
@@ -116,6 +123,7 @@ func _test_main_menu_and_continue() -> void:
 	await process_frames(2)
 	(pause.get_node("%MainMenuButton") as Button).grab_focus()
 	await _press(&"ui_accept")
+	check(not pause.get_confirm_dialog().is_open(), "no confirmation when nothing is unsaved")
 	check(await wait_for_transition(), "back to the main menu")
 	check(not get_tree().paused, "game unpaused")
 	check(GameState.player_name == "" and QuestManager.get_quest_status(QUEST_ID) == QuestManager.STATUS_NOT_STARTED
@@ -161,11 +169,22 @@ func _test_load_from_pause_menu_rewinds() -> void:
 	section("Load Game from the pause menu rewinds to the save")
 	await _wait_cooldown()
 	var pause: PauseMenu = get_tree().current_scene.get_node("HUD/PauseMenu")
+	var slots: SaveSlotsPanel = pause.get_slots_panel()
 	tap_action(&"ui_cancel")
 	await process_frames(2)
 	(pause.get_node("%LoadButton") as Button).grab_focus()
 	_loaded_slots.clear()
 	await _press(&"ui_accept")
+	check(slots.is_open() and slots.get_mode() == SaveSlotsPanel.MODE_LOAD, "Load Game opens the slot screen")
+	check(slots.get_slot_button(2).disabled and slots.get_slot_button(3).disabled, "empty slots cannot be loaded")
+	await _press(&"ui_accept")  # slot 1
+	var confirm: ConfirmDialog = slots.get_confirm_dialog()
+	check(confirm.is_open() and confirm.get_message().begins_with("Load slot 1? Progress since your last save"),
+		"loading over the finished quest asks first")
+	tap_action(&"ui_right")
+	await process_frames(1)
+	check(root.gui_get_focus_owner() == confirm.get_node("%YesButton"), "Right moves to Load inside the dialog")
+	await _press(&"ui_accept")  # Load
 	check(await wait_for_transition(), "scene reloaded")
 	check(_loaded_slots == [1], "game_loaded emitted")
 	check(not get_tree().paused, "game unpaused after loading")

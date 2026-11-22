@@ -1,15 +1,10 @@
 # PauseMenu
-# Esc pauses the game: Resume, Save Game, Load Game, Main Menu (REQ-50.2, 51.1).
-# Uses save slot 1 for now; the slot screen with three slots is task 9.3.
+# Esc pauses the game: Resume, Save Game, Load Game, Main Menu (REQ-31, 50.2, 51.1).
+# Save Game and Load Game open the three-slot screen. Main Menu asks first when
+# progress since the last save would be lost (REQ-31.5).
 # Part of res://scenes/ui/hud.tscn. Runs while the tree is paused.
 class_name PauseMenu
 extends Control
-
-# ============================================================================
-# CONSTANTS
-# ============================================================================
-
-const SAVE_SLOT: int = 1
 
 # ============================================================================
 # PRIVATE VARIABLES
@@ -21,6 +16,8 @@ const SAVE_SLOT: int = 1
 @onready var _load_button: Button = %LoadButton
 @onready var _menu_button: Button = %MainMenuButton
 @onready var _status_label: Label = %StatusLabel
+@onready var _slots: SaveSlotsPanel = $SaveSlotsPanel
+@onready var _confirm: ConfirmDialog = $ConfirmDialog
 
 # ============================================================================
 # GODOT LIFECYCLE METHODS
@@ -30,11 +27,15 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	_resume_button.pressed.connect(close)
-	_save_button.pressed.connect(_on_save_pressed)
-	_load_button.pressed.connect(_on_load_pressed)
+	_save_button.pressed.connect(_slots.open.bind(SaveSlotsPanel.MODE_SAVE))
+	_load_button.pressed.connect(_slots.open.bind(SaveSlotsPanel.MODE_LOAD))
 	_menu_button.pressed.connect(_on_main_menu_pressed)
+	_slots.closed.connect(_on_slots_closed)
+	_slots.saved.connect(_on_slot_saved)
+	_slots.load_started.connect(_on_load_started)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# The slot screen and the confirm dialog are children and handle Esc first.
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if visible:
@@ -56,7 +57,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func open() -> void:
 	GameState.pause_game()
 	visible = true
-	_show_slot_status()
+	_refresh_status()
 	_resume_button.grab_focus()
 
 func close() -> void:
@@ -70,39 +71,53 @@ func is_open() -> bool:
 func get_status_text() -> String:
 	return _status_label.text
 
+func get_slots_panel() -> SaveSlotsPanel:
+	return _slots
+
+func get_confirm_dialog() -> ConfirmDialog:
+	return _confirm
+
 # ============================================================================
 # PRIVATE METHODS
 # ============================================================================
 
-func _show_slot_status() -> void:
-	var info: Dictionary = SaveManager.get_slot_info(SAVE_SLOT)
-	_load_button.disabled = not info["valid"]
-	if not info["exists"]:
-		_status_label.text = "Slot %d is empty." % SAVE_SLOT
-	elif not info["valid"]:
-		_status_label.text = "Slot %d is damaged: %s" % [SAVE_SLOT, info["error"]]
+func _refresh_status() -> void:
+	var latest: int = SaveManager.get_latest_slot()
+	_load_button.disabled = latest == 0
+	if latest == 0:
+		_status_label.text = "No saved games yet."
 	else:
-		_status_label.text = "Slot %d: %s" % [SAVE_SLOT, SaveManager.describe_slot(info)]
+		_status_label.text = "Last save: slot %d · %s" % [
+			latest, SaveManager.describe_slot(SaveManager.get_slot_info(latest))]
+	if SaveManager.has_unsaved_progress():
+		_status_label.text += "\nUnsaved progress."
+
+func _go_to_main_menu() -> void:
+	visible = false
+	GameState.reset_game()
+	SceneManager.transition_to(GameState.MAIN_MENU_PATH)
 
 # ============================================================================
 # SIGNAL HANDLERS
 # ============================================================================
 
-func _on_save_pressed() -> void:
-	if SaveManager.save_game(SAVE_SLOT):
-		_show_slot_status()
-		_status_label.text = "Saved. " + _status_label.text
-	else:
-		_status_label.text = SaveManager.last_error
-
-func _on_load_pressed() -> void:
-	# Loading restores the game and unpauses it; on failure nothing changed.
-	if SaveManager.load_game(SAVE_SLOT):
-		visible = false
-	else:
-		_status_label.text = SaveManager.last_error
-
 func _on_main_menu_pressed() -> void:
+	if SaveManager.has_unsaved_progress():
+		_confirm.ask("Return to the main menu? Progress since your last save will be lost.",
+			_go_to_main_menu, "Leave")
+	else:
+		_go_to_main_menu()
+
+func _on_slots_closed() -> void:
+	if not visible:
+		return
+	_refresh_status()
+	_resume_button.grab_focus()
+
+func _on_slot_saved(slot: int) -> void:
+	_refresh_status()
+	_status_label.text = "Saved to slot %d.\n" % slot + _status_label.text
+
+func _on_load_started(_slot: int) -> void:
+	# Loading restores the game and unpauses it.
 	visible = false
-	GameState.reset_game()
-	SceneManager.transition_to(GameState.MAIN_MENU_PATH)

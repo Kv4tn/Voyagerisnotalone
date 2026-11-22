@@ -1388,7 +1388,8 @@ graph TD
     8. Test loading across game versions
 
 
-- [ ] 9.3. Save/Load UI [MVP]
+- [x] 9.3. Save/Load UI [MVP]
+  - **Status 2026-11-22 (slots)**: verified by `tests/integration/test_save_slots.gd` (69 checks): three-slot screen (`scenes/ui/save_slots_panel.tscn`) with commander, chapter, playtime and date; empty slots shown and usable for saving; damaged slots shown with the reason and not loadable; save, load and delete; confirmations for overwrite, delete and loading over unsaved progress (`scenes/ui/confirm_dialog.tscn`, Cancel focused); reachable from the pause menu (save and load) and the main menu (Load Game). Keyboard focus stays inside the screen and the dialog (confirmed by disabling the focus links: the test fails).
   - **Status 2026-11-21 (save/load)**: partial. The pause menu saves to and loads from slot 1 and shows its metadata (commander, chapter, playtime); the main menu shows Continue for slot 1. `SaveManager.get_slot_info()` and `delete_save()` exist for a slot screen. Not done: the 3-slot screen, delete button, overwrite/delete confirmations.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
@@ -1530,6 +1531,7 @@ graph TD
 
 
 - [ ] 10.4. Main Menu Scene [MVP]
+  - **Status 2026-11-22 (slots)**: Continue now loads the most recent valid save of the three slots; a Load Game button opens the slot screen; when every save is damaged Continue is disabled and the menu says why. Verified by `tests/integration/test_save_slots.gd`.
   - **Status 2026-11-21 (save/load)**: Continue button (slot 1, with commander/chapter/playtime, focused when present) verified by `tests/integration/test_save_load_flow.gd`; a damaged save disables it and shows the reason.
   - **Status 2026-11-17 (menu)**: partial. `scenes/ui/main_menu.tscn` is the main scene: title, star background, New Game and Quit, keyboard focus, shared theme `scenes/ui/theme/voyager_theme.tres`. New Game opens the name entry (REQ-3: 2-20 chars, errors shown, Enter starts, Esc goes back). Verified by `tests/integration/test_new_game_flow.gd`. Not done: Load Game, Settings, Credits, menu music; Quit is wired but not covered by a test.
   - **Owner**: Dev 1
@@ -1563,6 +1565,7 @@ graph TD
 
 
 - [ ] 10.5. Pause Menu [MVP]
+  - **Status 2026-11-22 (slots)**: Main Menu now asks for confirmation when there is unsaved progress (`SaveManager.has_unsaved_progress()`) and leaves directly otherwise; Save opens the slot screen. Still missing: Settings button (needs 12.1).
   - **Status 2026-11-21 (save/load)**: partial, verified by `tests/integration/test_save_load_flow.gd`: Esc opens it (not during conversations; Esc still closes terminal messages first), the tree is paused and the player frozen, Resume/Esc continue, Save Game and Load Game use slot 1, Main Menu returns to the menu and clears the session. Lives in the HUD (`scripts/ui/pause_menu.gd`). Not done: Settings button, confirmation before leaving to the main menu.
   - **Owner**: Dev 1
   - **Estimated**: 2 hours

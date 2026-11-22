@@ -1,6 +1,7 @@
 # MainMenu
-# Title screen with Continue / New Game / Quit and the commander name entry
-# (REQ-2, REQ-3). Continue loads save slot 1 and appears only when it exists.
+# Title screen with Continue / Load Game / New Game / Quit and the commander
+# name entry (REQ-2, REQ-3). Continue loads the most recent valid save; Load
+# Game opens the three-slot screen. Both appear only when a save exists.
 # Attached to: res://scenes/ui/main_menu.tscn
 class_name MainMenu
 extends Control
@@ -13,10 +14,10 @@ extends Control
 ## so a late signal for the same text must not clear a fresh error.
 var _rejected_text: String = ""
 
-const CONTINUE_SLOT: int = 1
-
 @onready var _menu_panel: Control = $MenuPanel
 @onready var _continue_button: Button = %ContinueButton
+@onready var _load_game_button: Button = %LoadGameButton
+@onready var _slots: SaveSlotsPanel = $SaveSlotsPanel
 @onready var _save_info_label: Label = %SaveInfoLabel
 @onready var _menu_message_label: Label = %MenuMessageLabel
 @onready var _new_game_button: Button = %NewGameButton
@@ -33,6 +34,9 @@ const CONTINUE_SLOT: int = 1
 
 func _ready() -> void:
 	_continue_button.pressed.connect(_on_continue_pressed)
+	_load_game_button.pressed.connect(_slots.open.bind(SaveSlotsPanel.MODE_LOAD))
+	_slots.closed.connect(_show_menu)
+	_slots.load_started.connect(_on_load_started)
 	_new_game_button.pressed.connect(_show_name_entry)
 	_quit_button.pressed.connect(GameState.quit_game)
 	_start_button.pressed.connect(_try_start)
@@ -80,15 +84,17 @@ func _show_menu() -> void:
 		_new_game_button.grab_focus()
 
 func _refresh_continue() -> void:
-	var info: Dictionary = SaveManager.get_slot_info(CONTINUE_SLOT)
-	_continue_button.visible = info["exists"]
-	_continue_button.disabled = not info["valid"]
-	if not info["exists"]:
+	var any_save: bool = SaveManager.has_any_save()
+	var latest: int = SaveManager.get_latest_slot()
+	_continue_button.visible = any_save
+	_continue_button.disabled = latest == 0
+	_load_game_button.visible = any_save
+	if not any_save:
 		_save_info_label.text = ""
-	elif info["valid"]:
-		_save_info_label.text = SaveManager.describe_slot(info)
+	elif latest == 0:
+		_save_info_label.text = "All saved games are damaged. Open Load Game for details."
 	else:
-		_save_info_label.text = "Saved game is damaged: " + str(info["error"])
+		_save_info_label.text = SaveManager.describe_slot(SaveManager.get_slot_info(latest))
 
 func _show_name_entry() -> void:
 	_menu_panel.visible = false
@@ -120,12 +126,15 @@ func _try_start() -> void:
 
 func _on_continue_pressed() -> void:
 	_menu_message_label.text = ""
-	if SaveManager.load_game(CONTINUE_SLOT):
-		# Lock the menu so a second press cannot start a second load.
-		for button: Button in [_continue_button, _new_game_button, _quit_button]:
-			button.disabled = true
+	if SaveManager.load_game(SaveManager.get_latest_slot()):
+		_on_load_started(SaveManager.get_latest_slot())
 	else:
 		_menu_message_label.text = SaveManager.last_error
+
+func _on_load_started(_slot: int) -> void:
+	# Lock the menu so a second press cannot start a second load.
+	for button: Button in [_continue_button, _load_game_button, _new_game_button, _quit_button]:
+		button.disabled = true
 
 func _on_name_submitted(_text: String) -> void:
 	_try_start()

@@ -30,6 +30,7 @@ func _sample_data() -> Dictionary:
 	return {
 		"version": SaveManager.SAVE_VERSION,
 		"timestamp": "2026-11-20T23:30:00",
+		"saved_unix": 1795217400.5,
 		"playtime_seconds": 754.25,
 		"player_data": {"name": "Asel Nur", "chapter": 1, "current_scene": ROOM,
 			"position": {"x": 300.5, "y": 250.0}},
@@ -43,6 +44,7 @@ func _sample_data() -> Dictionary:
 func _without_timestamp(data: Dictionary) -> Dictionary:
 	var copy: Dictionary = data.duplicate(true)
 	copy.erase("timestamp")
+	copy.erase("saved_unix")
 	return copy
 
 
@@ -208,6 +210,7 @@ func _random_data(rng: RandomNumberGenerator) -> Dictionary:
 	return {
 		"version": SaveManager.SAVE_VERSION,
 		"timestamp": "2026-11-20T00:00:00",
+		"saved_unix": rng.randf_range(0.0, 2.0e9),
 		"playtime_seconds": rng.randf_range(0.0, 36000.0),
 		"player_data": {
 			"name": names[rng.randi_range(0, names.size() - 1)],

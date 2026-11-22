@@ -29,6 +29,7 @@ touch real saves.
 	"story_data": {
 		"flags": {"engineering_log_read": true, "met_elias": true}
 	},
+	"saved_unix": 1795364102.482,
 	"timestamp": "2026-11-21T17:15:02",
 	"version": 1
 }
@@ -42,6 +43,7 @@ Files are tab-indented with sorted keys so they can be read and diffed.
 |---|---|
 | `version` | Save format version. Checked before anything else |
 | `timestamp` | Local time of saving, shown in slot lists |
+| `saved_unix` | Unix time of saving with fractions; Continue picks the slot with the highest value |
 | `playtime_seconds` | Total play time |
 | `player_data` | Commander name, chapter (1-7), scene path, position |
 | `story_data.flags` | Every story flag; values are true/false, numbers or text |
@@ -68,6 +70,16 @@ Files are tab-indented with sorted keys so they can be read and diffed.
 refused with "saved by a newer version of the game". When the format
 changes: increase `SAVE_VERSION` and add a step to `_migrate()` that converts
 the previous version, so old saves keep loading.
+
+## In the game
+
+- Pause menu (Esc): Save Game and Load Game open the three-slot screen.
+  Overwriting, deleting and loading over unsaved progress ask first.
+- Main Menu from the pause menu asks first when there is unsaved progress:
+  story flags, quests, relationships, name or chapter changed since the last
+  save, load or new game. Walking around and playtime do not count.
+- Main menu: Continue loads the most recent valid save; Load Game opens the
+  slot screen. Damaged slots are listed with the reason and cannot be loaded.
 
 ## Writing
 
