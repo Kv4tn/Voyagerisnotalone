@@ -252,7 +252,11 @@ func reset_game() -> void:
 	game_time = 0.0
 	chapter_start_time = 0.0
 	
+	if get_tree().paused:
+		get_tree().paused = false
+	
 	# Reset all managers
+	DialogueManager.reset()
 	QuestManager.reset()
 	RelationshipManager.reset()
 	StoryFlagManager.reset()
@@ -271,6 +275,20 @@ func get_game_state_data() -> Dictionary:
 		"chapter_start_time": chapter_start_time,
 		"game_started": game_started
 	}
+
+func restore_from_save(saved_name: String, chapter: int, playtime: float) -> void:
+	"""
+	Restore player identity and progress from a validated save file.
+	Starts the game without loading a scene; SaveManager does that.
+	"""
+	player_name = saved_name
+	current_chapter = chapter
+	game_time = playtime
+	chapter_start_time = playtime
+	game_started = true
+	if is_paused:
+		resume_game()
+	player_name_changed.emit(player_name)
 
 func set_game_state_data(data: Dictionary) -> void:
 	"""

@@ -13,6 +13,9 @@ extends Node
 
 var root: Window = null
 
+## Tests never touch the player's real saves in user://saves/.
+const TEST_SAVE_DIR: String = "user://test_saves/"
+
 var _failures: int = 0
 var _checks: int = 0
 var _log: LogRecorder = LogRecorder.new()
@@ -58,6 +61,8 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	root = get_tree().root
 	OS.add_logger(_log)
+	SaveManager.save_dir = TEST_SAVE_DIR
+	clear_test_saves()
 	_main.call_deferred()
 
 
@@ -70,6 +75,7 @@ func _main() -> void:
 	for message: String in leftover["warnings"]:
 		print("  note: warning outside capture_log(): " + message)
 	print("%d/%d checks passed" % [_checks - _failures, _checks])
+	clear_test_saves()
 	OS.remove_logger(_log)
 	get_tree().quit(1 if _failures > 0 or _checks == 0 else 0)
 
@@ -77,6 +83,12 @@ func _main() -> void:
 ## Override in the test script. May use await.
 func run_tests() -> void:
 	pass
+
+
+func clear_test_saves() -> void:
+	DirAccess.make_dir_recursive_absolute(TEST_SAVE_DIR)
+	for file: String in DirAccess.get_files_at(TEST_SAVE_DIR):
+		DirAccess.remove_absolute(TEST_SAVE_DIR + file)
 
 
 func section(title: String) -> void:

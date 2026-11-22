@@ -1330,6 +1330,7 @@ graph TD
 
 
 - [ ] 9.1. SaveManager Singleton - Save [MVP]
+  - **Status 2026-11-21 (save/load)**: partial, verified by `tests/unit/test_save_manager.gd` (51 checks) and `tests/integration/test_save_load_flow.gd` (47 checks). `save_game(slot)` writes `user://saves/slot_<n>.json` (slots 1-3) with player name, chapter, playtime, scene, position, all story flags, quest progress and relationships; JSON with format version 1, written to a .tmp file and renamed. Format: `docs/save-format.md`. Not done: puzzle states (PuzzleManager has no state yet); saving is refused during conversations and scene transitions.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 1.2, 1.3, 3.7, 4.1
@@ -1359,6 +1360,7 @@ graph TD
 
 
 - [ ] 9.2. SaveManager Singleton - Load [MVP]
+  - **Status 2026-11-21 (save/load)**: partial, verified by the same tests: `load_game(slot)` validates the whole file first (descriptive errors for damaged JSON, missing/unknown fields, bad values, unknown quests, newer versions) and leaves the game unchanged on failure; then restores every system without re-triggering signals or quest rewards, loads the saved scene and places the player. Round trip covered by a randomized property test (200 states, fixed seed). Version check and `_migrate()` hook exist; no migration yet because version 1 is the first format. Not done: puzzle states.
   - **Owner**: Dev 1
   - **Estimated**: 4 hours
   - **Dependencies**: 9.1
@@ -1387,6 +1389,7 @@ graph TD
 
 
 - [ ] 9.3. Save/Load UI [MVP]
+  - **Status 2026-11-21 (save/load)**: partial. The pause menu saves to and loads from slot 1 and shows its metadata (commander, chapter, playtime); the main menu shows Continue for slot 1. `SaveManager.get_slot_info()` and `delete_save()` exist for a slot screen. Not done: the 3-slot screen, delete button, overwrite/delete confirmations.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
   - **Dependencies**: 9.1, 9.2
@@ -1414,6 +1417,7 @@ graph TD
 
 
 - [ ] 9.4. Auto-Save System [MVP]
+  - **Status 2026-11-21 (save/load)**: not started.
   - **Owner**: Dev 1
   - **Estimated**: 2 hours
   - **Dependencies**: 9.1
@@ -1526,6 +1530,7 @@ graph TD
 
 
 - [ ] 10.4. Main Menu Scene [MVP]
+  - **Status 2026-11-21 (save/load)**: Continue button (slot 1, with commander/chapter/playtime, focused when present) verified by `tests/integration/test_save_load_flow.gd`; a damaged save disables it and shows the reason.
   - **Status 2026-11-17 (menu)**: partial. `scenes/ui/main_menu.tscn` is the main scene: title, star background, New Game and Quit, keyboard focus, shared theme `scenes/ui/theme/voyager_theme.tres`. New Game opens the name entry (REQ-3: 2-20 chars, errors shown, Enter starts, Esc goes back). Verified by `tests/integration/test_new_game_flow.gd`. Not done: Load Game, Settings, Credits, menu music; Quit is wired but not covered by a test.
   - **Owner**: Dev 1
   - **Estimated**: 3 hours
@@ -1558,6 +1563,7 @@ graph TD
 
 
 - [ ] 10.5. Pause Menu [MVP]
+  - **Status 2026-11-21 (save/load)**: partial, verified by `tests/integration/test_save_load_flow.gd`: Esc opens it (not during conversations; Esc still closes terminal messages first), the tree is paused and the player frozen, Resume/Esc continue, Save Game and Load Game use slot 1, Main Menu returns to the menu and clears the session. Lives in the HUD (`scripts/ui/pause_menu.gd`). Not done: Settings button, confirmation before leaving to the main menu.
   - **Owner**: Dev 1
   - **Estimated**: 2 hours
   - **Dependencies**: 1.3

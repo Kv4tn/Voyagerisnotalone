@@ -1,5 +1,6 @@
 # MainMenu
-# Title screen with New Game / Quit and the commander name entry (REQ-2, REQ-3).
+# Title screen with Continue / New Game / Quit and the commander name entry
+# (REQ-2, REQ-3). Continue loads save slot 1 and appears only when it exists.
 # Attached to: res://scenes/ui/main_menu.tscn
 class_name MainMenu
 extends Control
@@ -12,7 +13,12 @@ extends Control
 ## so a late signal for the same text must not clear a fresh error.
 var _rejected_text: String = ""
 
+const CONTINUE_SLOT: int = 1
+
 @onready var _menu_panel: Control = $MenuPanel
+@onready var _continue_button: Button = %ContinueButton
+@onready var _save_info_label: Label = %SaveInfoLabel
+@onready var _menu_message_label: Label = %MenuMessageLabel
 @onready var _new_game_button: Button = %NewGameButton
 @onready var _quit_button: Button = %QuitButton
 @onready var _name_panel: Control = $NamePanel
@@ -26,6 +32,7 @@ var _rejected_text: String = ""
 # ============================================================================
 
 func _ready() -> void:
+	_continue_button.pressed.connect(_on_continue_pressed)
 	_new_game_button.pressed.connect(_show_name_entry)
 	_quit_button.pressed.connect(GameState.quit_game)
 	_start_button.pressed.connect(_try_start)
@@ -47,6 +54,12 @@ func _unhandled_input(event: InputEvent) -> void:
 # PUBLIC METHODS
 # ============================================================================
 
+func get_save_info_text() -> String:
+	return _save_info_label.text
+
+func get_menu_message() -> String:
+	return _menu_message_label.text
+
 func is_name_entry_open() -> bool:
 	return _name_panel.visible
 
@@ -60,7 +73,22 @@ func get_error_text() -> String:
 func _show_menu() -> void:
 	_name_panel.visible = false
 	_menu_panel.visible = true
-	_new_game_button.grab_focus()
+	_refresh_continue()
+	if _continue_button.visible and not _continue_button.disabled:
+		_continue_button.grab_focus()
+	else:
+		_new_game_button.grab_focus()
+
+func _refresh_continue() -> void:
+	var info: Dictionary = SaveManager.get_slot_info(CONTINUE_SLOT)
+	_continue_button.visible = info["exists"]
+	_continue_button.disabled = not info["valid"]
+	if not info["exists"]:
+		_save_info_label.text = ""
+	elif info["valid"]:
+		_save_info_label.text = SaveManager.describe_slot(info)
+	else:
+		_save_info_label.text = "Saved game is damaged: " + str(info["error"])
 
 func _show_name_entry() -> void:
 	_menu_panel.visible = false
@@ -89,6 +117,15 @@ func _try_start() -> void:
 # ============================================================================
 # SIGNAL HANDLERS
 # ============================================================================
+
+func _on_continue_pressed() -> void:
+	_menu_message_label.text = ""
+	if SaveManager.load_game(CONTINUE_SLOT):
+		# Lock the menu so a second press cannot start a second load.
+		for button: Button in [_continue_button, _new_game_button, _quit_button]:
+			button.disabled = true
+	else:
+		_menu_message_label.text = SaveManager.last_error
 
 func _on_name_submitted(_text: String) -> void:
 	_try_start()

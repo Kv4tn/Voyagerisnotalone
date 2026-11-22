@@ -5,6 +5,7 @@
 [ext_resource type="Theme" path="res://scenes/ui/theme/voyager_theme.tres" id="3_theme"]
 [ext_resource type="Script" path="res://scripts/ui/quest_tracker.gd" id="4_tracker"]
 [ext_resource type="Script" path="res://scripts/ui/relationship_toast.gd" id="5_toast"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="6_pause"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 content_margin_left = 8.0
@@ -177,3 +178,85 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 2
+
+[node name="PauseMenu" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("6_pause")
+
+[node name="Dim" type="ColorRect" parent="PauseMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.016, 0.027, 0.055, 0.75)
+
+[node name="Panel" type="PanelContainer" parent="PauseMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -90.0
+offset_right = 130.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="PauseMenu/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="PauseMenu/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.63, 0.25, 1)
+theme_override_font_sizes/font_size = 14
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Resume"
+
+[node name="SaveButton" type="Button" parent="PauseMenu/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Save Game"
+
+[node name="LoadButton" type="Button" parent="PauseMenu/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Load Game"
+
+[node name="MainMenuButton" type="Button" parent="PauseMenu/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Main Menu"
+
+[node name="StatusLabel" type="Label" parent="PauseMenu/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(236, 26)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 1)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 3

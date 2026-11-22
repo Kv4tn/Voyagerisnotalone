@@ -8,6 +8,9 @@ extends Node
 # ============================================================================
 
 signal scene_transition_started(scene_path: String)
+## The new scene is in the tree and current, but the screen is still dark.
+## Use it to place the player before the fade-in.
+signal scene_loaded(scene: Node)
 signal scene_transition_completed(scene_path: String)
 
 # ============================================================================
@@ -88,6 +91,7 @@ func transition_to(scene_path: String, transition_type: String = "fade") -> void
 	current_scene = new_scene_resource.instantiate()
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
+	scene_loaded.emit(current_scene)
 	
 	# Play transition in animation
 	await play_transition_in(transition_type)

@@ -47,6 +47,9 @@ const OBJECTIVE_KEYS: PackedStringArray = [
 	"objective_id", "description", "type", "target", "flag", "value", "optional", "comment"]
 const PREREQUISITE_KEYS: PackedStringArray = ["story_flags", "quests_completed", "relationships"]
 const REWARD_KEYS: PackedStringArray = ["story_flags", "relationships"]
+## A quest that is not_started is simply absent from a save file.
+const SAVABLE_STATUSES: PackedStringArray = [STATUS_ACTIVE, STATUS_COMPLETED, STATUS_FAILED]
+const SAVE_ENTRY_KEYS: PackedStringArray = ["quest_id", "status", "objectives_done"]
 
 # ============================================================================
 # PUBLIC VARIABLES
@@ -220,6 +223,78 @@ func has_quest(quest_id: String) -> bool:
 func clear_cache() -> void:
 	"""Forget loaded definitions so edited JSON files are read again."""
 	_definitions.clear()
+
+func get_save_data() -> Array:
+	"""
+	Quest progress for the save file, in start order:
+	[{quest_id, status, objectives_done: [objective ids]}]
+	"""
+	var result: Array = []
+	for quest_id: String in _start_order:
+		var done: Array = []
+		for objective: Dictionary in get_definition(quest_id)["objectives"]:
+			if is_objective_done(quest_id, objective["objective_id"]):
+				done.append(objective["objective_id"])
+		result.append({"quest_id": quest_id, "status": get_quest_status(quest_id), "objectives_done": done})
+	return result
+
+func validate_save_data(data: Variant) -> PackedStringArray:
+	"""Check the quest_data section of a save file against the quest definitions."""
+	var errors: PackedStringArray = []
+	if not data is Array:
+		errors.append("quest_data must be an array")
+		return errors
+	var seen: Dictionary = {}
+	for i: int in (data as Array).size():
+		var entry: Variant = data[i]
+		var where: String = "quest_data[%d]" % i
+		if not entry is Dictionary:
+			errors.append(where + " must be an object")
+			continue
+		_check_keys(entry, SAVE_ENTRY_KEYS, where, errors)
+		var quest_id: Variant = entry.get("quest_id")
+		if not _is_non_empty_string(quest_id):
+			errors.append(where + ": quest_id must be a non-empty string")
+			continue
+		where = "quest_data '%s'" % quest_id
+		if seen.has(quest_id):
+			errors.append(where + ": listed twice")
+		seen[quest_id] = true
+		if not has_quest(quest_id):
+			errors.append(where + ": no such quest in %s" % quest_dir)
+			continue
+		var definition: Dictionary = get_definition(quest_id)
+		if definition.is_empty():
+			errors.append(where + ": the quest file is invalid")
+			continue
+		if not _is_one_of(entry.get("status"), SAVABLE_STATUSES):
+			errors.append(where + ": status must be active, completed or failed")
+		var done: Variant = entry.get("objectives_done")
+		if not done is Array:
+			errors.append(where + ": objectives_done must be an array")
+			continue
+		var objective_ids: PackedStringArray = []
+		for objective: Dictionary in definition["objectives"]:
+			objective_ids.append(objective["objective_id"])
+		for objective_id: Variant in done:
+			if not _is_one_of(objective_id, objective_ids):
+				errors.append(where + ": unknown objective '%s'" % str(objective_id))
+	return errors
+
+func load_save_data(data: Array) -> void:
+	"""
+	Restore quest progress from a validated save. Emits no signals and gives
+	no rewards: rewards were already applied when the quest was completed,
+	and their effects are in the saved flags and relationships.
+	"""
+	reset()
+	for entry: Dictionary in data:
+		var quest_id: String = entry["quest_id"]
+		var objectives: Dictionary = {}
+		for objective: Dictionary in get_definition(quest_id)["objectives"]:
+			objectives[objective["objective_id"]] = objective["objective_id"] in entry["objectives_done"]
+		_states[quest_id] = {"status": entry["status"], "objectives": objectives}
+		_start_order.append(quest_id)
 
 func reset() -> void:
 	"""Forget all quest progress (new game)."""

@@ -201,6 +201,46 @@ static func validate_change(entry: Variant) -> String:
 static func _is_one_of(value: Variant, allowed: PackedStringArray) -> bool:
 	return value is String and allowed.has(value)
 
+func get_save_data() -> Dictionary:
+	"""{npc_id: {trust, bond}} for the save file."""
+	return _values.duplicate(true)
+
+static func validate_save_data(data: Variant) -> PackedStringArray:
+	"""Check the relationship_data section of a save file."""
+	var errors: PackedStringArray = []
+	if not data is Dictionary:
+		errors.append("relationship_data must be an object")
+		return errors
+	for npc_id: Variant in data:
+		var where: String = "relationship_data.%s" % str(npc_id)
+		if not _is_one_of(npc_id, CREW_MEMBERS):
+			errors.append(where + ": not a crew member")
+			continue
+		var entry: Variant = data[npc_id]
+		if not entry is Dictionary:
+			errors.append(where + " must be an object")
+			continue
+		for key: Variant in entry:
+			if not _is_one_of(key, TYPES):
+				errors.append(where + ": unknown field '%s'" % str(key))
+		for relationship_type: String in TYPES:
+			var value: Variant = entry.get(relationship_type)
+			if not is_whole_number(value) or value < MIN_VALUE or value > MAX_VALUE:
+				errors.append(where + ".%s must be a whole number from %d to %d"
+					% [relationship_type, MIN_VALUE, MAX_VALUE])
+	return errors
+
+func load_save_data(data: Dictionary) -> void:
+	"""
+	Restore values from a validated save. Crew members missing from the save
+	(e.g. added in a newer version) keep their starting values. No signals:
+	loading is not a change the player made.
+	"""
+	reset()
+	for npc_id: String in data:
+		for relationship_type: String in TYPES:
+			_values[npc_id][relationship_type] = int(data[npc_id][relationship_type])
+
 func _is_valid(npc_id: String, relationship_type: String) -> bool:
 	if not is_crew_member(npc_id):
 		push_warning("RelationshipManager: '%s' is not a crew member" % npc_id)

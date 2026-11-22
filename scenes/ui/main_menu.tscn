@@ -42,9 +42,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -160.0
-offset_top = -80.0
+offset_top = -110.0
 offset_right = 160.0
-offset_bottom = 80.0
+offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 8
@@ -68,6 +68,14 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 
+[node name="ContinueButton" type="Button" parent="MenuPanel"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(140, 22)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Continue"
+
 [node name="NewGameButton" type="Button" parent="MenuPanel"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 22)
@@ -81,6 +89,23 @@ custom_minimum_size = Vector2(140, 22)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Quit"
+
+[node name="SaveInfoLabel" type="Label" parent="MenuPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.37, 0.7, 0.77, 0.8)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="MenuMessageLabel" type="Label" parent="MenuPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.36, 0.33, 1)
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="NamePanel" type="PanelContainer" parent="."]
 visible = false
