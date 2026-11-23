@@ -117,6 +117,17 @@ func capture_log(action: Callable) -> Dictionary:
 	return logged
 
 
+## Same as capture_log() for an action that awaits (for example one that waits
+## for a scene transition): messages logged until the action returns count as
+## expected. Call it with await.
+func capture_log_async(action: Callable) -> Dictionary:
+	_fail_on_unexpected_errors()
+	var result: Variant = await action.call()
+	var logged: Dictionary = _log.take()
+	logged["result"] = result
+	return logged
+
+
 ## True when one of the messages contains every given fragment.
 func has_message(messages: PackedStringArray, fragments: Array) -> bool:
 	for message: String in messages:

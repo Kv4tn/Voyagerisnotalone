@@ -34,6 +34,9 @@ const FADE_COLOR: Color = Color(0.016, 0.027, 0.055, 1.0)
 # ============================================================================
 
 var _fade_rect: ColorRect = null
+## Marker the player is moved to when the next scene loads ("" = keep the
+## position the scene was authored with).
+var _pending_spawn: String = ""
 
 # ============================================================================
 # GODOT LIFECYCLE METHODS
@@ -51,6 +54,37 @@ func _ready() -> void:
 # ============================================================================
 # PUBLIC METHODS
 # ============================================================================
+
+func travel_to(scene_path: String, spawn_point_name: String) -> bool:
+	"""
+	Move the player to another scene and place them at the Marker2D called
+	spawn_point_name in it (doors use this)
+	@return: False when a transition is running or the scene does not exist
+	"""
+	if is_transitioning:
+		return false
+	if not ResourceLoader.exists(scene_path):
+		push_error("SceneManager: Scene not found: %s" % scene_path)
+		return false
+	_pending_spawn = spawn_point_name
+	transition_to(scene_path)
+	return true
+
+func get_player() -> Node2D:
+	"""The player in the current scene, or null."""
+	var scene: Node = get_tree().current_scene
+	if scene == null:
+		return null
+	for node: Node in get_tree().get_nodes_in_group(PlayerController.GROUP):
+		if scene.is_ancestor_of(node):
+			return node as Node2D
+	return null
+
+static func find_spawn_point(scene: Node, spawn_point_name: String) -> Marker2D:
+	"""The Marker2D with that name anywhere in scene, or null."""
+	if spawn_point_name.is_empty():
+		return null
+	return scene.find_child(spawn_point_name, true, false) as Marker2D
 
 func transition_to(scene_path: String, transition_type: String = "fade") -> void:
 	"""
@@ -91,6 +125,7 @@ func transition_to(scene_path: String, transition_type: String = "fade") -> void
 	current_scene = new_scene_resource.instantiate()
 	get_tree().root.add_child(current_scene)
 	get_tree().current_scene = current_scene
+	_place_at_pending_spawn()
 	scene_loaded.emit(current_scene)
 	
 	# Play transition in animation
@@ -103,6 +138,21 @@ func transition_to(scene_path: String, transition_type: String = "fade") -> void
 # ============================================================================
 # PRIVATE METHODS
 # ============================================================================
+
+func _place_at_pending_spawn() -> void:
+	var spawn_name: String = _pending_spawn
+	_pending_spawn = ""
+	if spawn_name.is_empty():
+		return
+	var marker: Marker2D = find_spawn_point(current_scene, spawn_name)
+	var player: Node2D = get_player()
+	if marker == null:
+		push_warning("SceneManager: no Marker2D '%s' in %s; player keeps the default position"
+			% [spawn_name, current_scene.scene_file_path])
+	elif player == null:
+		push_warning("SceneManager: %s has no player to place" % current_scene.scene_file_path)
+	else:
+		player.global_position = marker.global_position
 
 func play_transition_out(type: String) -> void:
 	"""Fade the screen to FADE_COLOR. Mouse input is blocked from here on."""

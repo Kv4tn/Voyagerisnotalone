@@ -1,0 +1,126 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/prefabs/terminal.tscn" id="2_terminal"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/prefabs/door.tscn" id="4_door"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hwall"]
+size = Vector2(640, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vwall"]
+size = Vector2(16, 360)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_core"]
+size = Vector2(64, 64)
+
+[node name="PrototypeReactorRoom" type="Node2D"]
+
+[node name="Floor" type="ColorRect" parent="."]
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.043, 0.075, 0.141, 1)
+
+[node name="FloorInset" type="ColorRect" parent="."]
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 608.0
+offset_bottom = 328.0
+mouse_filter = 2
+color = Color(0.07, 0.09, 0.15, 1)
+
+[node name="Walls" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="TopVisual" type="ColorRect" parent="Walls"]
+offset_right = 640.0
+offset_bottom = 16.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="BottomVisual" type="ColorRect" parent="Walls"]
+offset_top = 344.0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="LeftVisual" type="ColorRect" parent="Walls"]
+offset_right = 16.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="RightVisual" type="ColorRect" parent="Walls"]
+offset_left = 624.0
+offset_right = 640.0
+offset_bottom = 360.0
+mouse_filter = 2
+color = Color(0.11, 0.165, 0.267, 1)
+
+[node name="Top" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 8)
+shape = SubResource("RectangleShape2D_hwall")
+
+[node name="Bottom" type="CollisionShape2D" parent="Walls"]
+position = Vector2(320, 352)
+shape = SubResource("RectangleShape2D_hwall")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(8, 180)
+shape = SubResource("RectangleShape2D_vwall")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(632, 180)
+shape = SubResource("RectangleShape2D_vwall")
+
+[node name="ReactorCore" type="StaticBody2D" parent="."]
+position = Vector2(320, 180)
+collision_mask = 0
+
+[node name="Shell" type="ColorRect" parent="ReactorCore"]
+offset_left = -32.0
+offset_top = -32.0
+offset_right = 32.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.17, 0.22, 0.32, 1)
+
+[node name="Core" type="ColorRect" parent="ReactorCore"]
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.88, 0.63, 0.25, 0.85)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ReactorCore"]
+shape = SubResource("RectangleShape2D_core")
+
+[node name="ReactorTerminal" parent="." instance=ExtResource("2_terminal")]
+position = Vector2(480, 23)
+terminal_id = "proto_reactor_status"
+title = "ASTERION // Reactor Status"
+message = "Core output: 62% of rated power.
+Breaker panel B-4: tripped.
+
+Voyager feed: diverted to the station ring by order of Mission Control."
+
+[node name="DoorToOffice" parent="." instance=ExtResource("4_door")]
+position = Vector2(8, 180)
+target_scene = "res://scenes/prototype/prototype_room.tscn"
+spawn_point_name = "Spawn_from_reactor"
+destination_name = "Engineering Office"
+
+[node name="Spawn_from_office" type="Marker2D" parent="."]
+position = Vector2(52, 180)
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(52, 180)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[connection signal="interaction_target_changed" from="Player" to="HUD" method="set_prompt"]
+[connection signal="message_opened" from="HUD" to="Player" method="lock_input"]
+[connection signal="message_closed" from="HUD" to="Player" method="unlock_input"]

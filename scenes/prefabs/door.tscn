@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/components/door.gd" id="1_door"]
+[ext_resource type="Script" path="res://scripts/components/interactable.gd" id="2_interactable"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(16, 40)
+
+[node name="Door" type="StaticBody2D"]
+collision_mask = 0
+script = ExtResource("1_door")
+
+[node name="Placeholder" type="Node2D" parent="."]
+
+[node name="Frame" type="Polygon2D" parent="Placeholder"]
+color = Color(0.17, 0.22, 0.32, 1)
+polygon = PackedVector2Array(-8, -20, 8, -20, 8, 20, -8, 20)
+
+[node name="Panel" type="Polygon2D" parent="Placeholder"]
+color = Color(0.1, 0.14, 0.22, 1)
+polygon = PackedVector2Array(-5, -17, 5, -17, 5, 17, -5, 17)
+
+[node name="Light" type="Polygon2D" parent="Placeholder"]
+polygon = PackedVector2Array(-2, -4, 2, -4, 2, 4, -2, 4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Interactable" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+script = ExtResource("2_interactable")
+prompt_text = "Go to Next Room"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactable"]
+shape = SubResource("RectangleShape2D_body")

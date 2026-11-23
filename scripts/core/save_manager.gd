@@ -380,13 +380,7 @@ func _progress_fingerprint() -> String:
 	return JSON.stringify(data, "", true, true)
 
 func _find_player() -> Node2D:
-	var scene: Node = get_tree().current_scene
-	if scene == null:
-		return null
-	for node: Node in get_tree().get_nodes_in_group(PlayerController.GROUP):
-		if scene.is_ancestor_of(node):
-			return node as Node2D
-	return null
+	return SceneManager.get_player()
 
 func _fail(message: String) -> bool:
 	last_error = message

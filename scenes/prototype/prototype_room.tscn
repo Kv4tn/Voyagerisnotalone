@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/prefabs/terminal.tscn" id="2_terminal"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" path="res://scenes/npcs/elias_voss.tscn" id="4_elias"]
+[ext_resource type="PackedScene" path="res://scenes/prefabs/door.tscn" id="5_door"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hwall"]
 size = Vector2(640, 16)
@@ -102,6 +103,17 @@ sets_story_flag = "engineering_log_read"
 
 [node name="EliasVoss" parent="." instance=ExtResource("4_elias")]
 position = Vector2(120, 90)
+
+[node name="DoorToReactor" parent="." instance=ExtResource("5_door")]
+position = Vector2(632, 180)
+target_scene = "res://scenes/prototype/prototype_reactor_room.tscn"
+spawn_point_name = "Spawn_from_office"
+destination_name = "Reactor Room"
+required_flag = "met_elias"
+locked_message = "Reactor access needs engineering clearance. Elias Voss has the codes."
+
+[node name="Spawn_from_reactor" type="Marker2D" parent="."]
+position = Vector2(588, 180)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(320, 220)
